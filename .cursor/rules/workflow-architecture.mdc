@@ -1,0 +1,51 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Labeeb Workflow Architecture (MDC)
+
+- Each workflow must represent a single, well-defined business or technical process, composed of discrete steps or actions.
+- Construct workflows from reusable components (tools, agents, or sub-workflows) to maximize flexibility and maintainability.
+- Workflows must be independent and self-contained, with clear boundaries and minimal external dependencies.
+- Support nesting and chaining: allow complex workflows to be built by composing simpler workflows or steps.
+- Expose clear input and output interfaces for each workflow to enable seamless integration.
+- Sub-workflows must be reusable and discoverable within the workflow library.
+- Document all workflows thoroughly, including purpose, expected inputs/outputs, and usage examples.
+- Catalog workflows in a central registry for easy search, selection, and extension.
+- Use descriptive, unique names for workflows reflecting their function and scope.
+- Handle errors gracefully at each step, with clear error propagation and recovery strategies.
+- Support logging, monitoring, and debugging for maintenance and troubleshooting.
+- Test workflows independently and in composition with others to ensure reliable execution.
+- Make workflow logic explicit and auditable, with each step and decision point clearly defined.
+- Ensure execution history and state transitions are traceable for compliance and optimization.
+- Design workflows to be platform-agnostic, abstracting away platform-specific details where possible.
+- Use standardized formats and protocols for workflow definitions and execution to ensure portability and interoperability.
+- Each workflow definition file must encapsulate a single workflow process (one workflow per file).
+- Use kebab-case filenames that clearly describe the workflow's function (e.g., user-registration-workflow.mdc).
+- Start each file with a YAML frontmatter block specifying: description, inputs, outputs, dependencies, alwaysApply.
+- Define workflow steps as a clear, ordered list, specifying the action, required inputs, and expected outputs for each step.
+- Keep workflow definitions focused and modular; decompose complex processes into sub-workflows where possible.
+- Reference any supporting files or templates using @filename.ext at the end of the file.
+
+## Minimal Workflow File Example
+
+```
+---
+description: Handles new user registration, including validation, account creation, and welcome notification.
+inputs: [user_data]
+outputs: [user_id, notification_status]
+dependencies: [validate-user-data-tool, create-user-agent, send-notification-tool]
+alwaysApply: false
+---
+
+- Validate user data using `validate-user-data-tool`.
+- Create user account with `create-user-agent`.
+- Send welcome notification with `send-notification-tool`.
+@validate-user-data-tool.mdc
+@create-user-agent.mdc
+@send-notification-tool.mdc
+```
+
+# Changelog
+- v1.0: Initial version, compliant with rule-structure-standards.mdc.

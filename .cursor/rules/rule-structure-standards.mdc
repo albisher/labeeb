@@ -1,0 +1,62 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Rule Structure Standards
+
+This rule defines the required structure and standards for all MDC rule files in the project. It applies to all contributors and automation scripts. The goal is to ensure clarity, consistency, and machine-readability for all project rules.
+
+- **One Rule, One File:** Each rule file must address a single, clearly defined topic or standard. Avoid combining unrelated rules in a single file.
+- **Descriptive Filenames:** Name each rule file in kebab-case, reflecting its specific purpose or enforced standard (e.g., `api-validation.mdc`, `dockerfile-best-practices.mdc`).
+- **Directory Placement:** Place all rule files in the `.cursor/rules/` directory at the project root. Do not nest rules in subdirectories or place them elsewhere in the project.
+- **Metadata Block:** Start every rule file with a YAML frontmatter block containing:
+  - `description`: Brief summary of the rule's intent.
+  - `globs`: File patterns the rule applies to (optional).
+  - `alwaysApply`: Boolean indicating if the rule is always active.
+  - `version`: (Recommended) Version number for important or evolving rules.
+- **Actionable Content:** After the metadata, list the rule's instructions as clear, actionable bullet points. Be specific—avoid vague language.
+- **Formatting Consistency:** Use Markdown for all rule files. Indent lists with two spaces. Use `-` for bullet points.
+- **Language:** Write all rules in clear, simple English.
+- **Conciseness:** Keep each rule file as brief as possible while remaining complete. Split complex standards into multiple focused rule files if needed.
+- **Referenced Files:** If examples or templates are needed, reference them using `@filename.ext` at the end of the file.
+- **Cross-Referencing:** Reference related rules using `@other-rule.mdc` to avoid overlap and improve discoverability.
+- **Versioning and Changelog:** For important rules, include a `version` field and optionally a changelog section at the end of the file.
+- **Review Process:** All new or updated rules must be reviewed and approved via pull request.
+- **Machine-Readability:** Write instructions and metadata to be easily parsed by automation tools.
+- **No Redundancy:** Avoid duplicating rules or combining multiple standards in one file. Each rule should be unique and non-overlapping.
+
+## Minimal Rule File Template
+
+```
+---
+description: <Brief summary of the rule's intent.>
+globs: ["<file-glob-patterns>"]
+alwaysApply: <true|false>
+version: <version-number>
+---
+
+- <Actionable instruction 1>
+- <Actionable instruction 2>
+```
+
+## Example Rule File Structure
+
+```
+---
+description: Enforces Python Black formatting for all Python files.
+globs: ["*.py"]
+alwaysApply: false
+version: 1.0
+---
+
+- Format all Python code with Black before committing.
+- Use the default Black line length of 88 characters.
+- Integrate Black into pre-commit hooks.
+```
+
+@pre-commit-config.yaml
+
+# Changelog
+- v1.1: Enhanced with intro, formatting, language, versioning, changelog, review, machine-readability, and cross-referencing guidance.
+- v1.0: Initial version.

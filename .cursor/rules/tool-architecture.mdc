@@ -1,0 +1,87 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Labeeb Tool Architecture (MDC)
+
+This document outlines the architecture and design principles for Labeeb's tool system, emphasizing the unique characteristics and value of tools.
+
+---
+
+## 1. Core Principles
+
+### 1.1 Atomicity
+
+- **Single Responsibility:**  
+  Each tool must perform a single, well-defined technical function or operation, abstracted from broader business logic.
+- **Smallest Executable Unit:**  
+  Tools should be designed as the smallest executable units, enabling their reuse and flexible orchestration into more complex capabilities.
+- **Independence:**  
+  Tools must be strictly independent and self-contained, with minimal dependencies on other tools to ensure modularity and ease of maintenance.
+
+### 1.2 Discoverability
+
+- **Comprehensive Documentation:**  
+  Every tool must be thoroughly documented, including its purpose, usage, limitations, and examples.
+- **Centralized Registry:**  
+  Tools should be easily discoverable through a centralized registry or catalog, enabling efficient selection and integration by Labeeb or other systems.
+- **Explicit Interfaces:**  
+  Each tool must have explicit, machine-readable input and output specifications, ensuring seamless interoperability and integration.
+
+### 1.3 Reliability
+
+- **Robustness:**  
+  Tools must be robust and resilient, gracefully handling errors and exceptions during execution.
+- **Clear Error Handling:**  
+  Each tool should provide clear, actionable error messages and status codes to facilitate troubleshooting and automation.
+- **Comprehensive Testing:**  
+  Tools must undergo comprehensive testing (unit, integration, and regression) to ensure consistent, reliable performance across all supported scenarios.
+
+---
+
+## 2. Additional Tool-Centric Principles
+
+- **Technical Focus:**  
+  Tools should focus on the "how" (the technical operation or transformation performed), not the "what" (business outcome), allowing for maximum reuse across different capabilities.
+- **Statelessness:**  
+  Tools should be stateless wherever possible, with any required state explicitly managed and documented.
+- **Curated Library:**  
+  The tool library should be curated to avoid redundancy, ensuring each tool has a unique, well-justified purpose.
+- **Versioning and Compatibility:**  
+  Tools should be versioned and backward-compatible where feasible, supporting safe evolution and upgrades.
+
+---
+
+## 3. Summary Table
+
+| Principle         | Description                                                                                  |
+|-------------------|----------------------------------------------------------------------------------------------|
+| Atomicity         | Single, well-defined function; smallest unit; independent and self-contained                 |
+| Discoverability   | Documented; registered; explicit machine-readable interfaces                                 |
+| Reliability       | Robust; clear errors; comprehensively tested                                                 |
+| Technical Focus   | Focus on technical operation, not business outcome                                           |
+| Statelessness     | Stateless by default; explicit state management if needed                                    |
+| Curated Library   | No redundancy; unique, justified tools                                                       |
+| Versioning        | Versioned and backward-compatible where feasible                                             |
+
+---
+
+## 4. Implementation Checklist
+
+- [ ] Each tool performs a single, well-defined technical function.
+- [ ] Tool is self-contained and independent.
+- [ ] Tool is thoroughly documented (purpose, usage, limitations, examples).
+- [ ] Tool is registered in the centralized catalog.
+- [ ] Tool has explicit, machine-readable input/output specifications.
+- [ ] Tool handles errors gracefully and provides clear error messages.
+- [ ] Tool is covered by unit, integration, and regression tests.
+- [ ] Tool is stateless (or state is explicitly managed and documented).
+- [ ] Tool is versioned and backward-compatible if updated.
+- [ ] No redundant tools exist in the library.
+
+---
+
+# Changelog
+- v1.0: Initial conversion to rule-structure-standards format.
+

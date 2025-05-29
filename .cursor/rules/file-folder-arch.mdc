@@ -1,0 +1,108 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project File and Folder Architecture
+
+This document defines and enforces the required file and folder structure for the project. All contributors and auditing scripts must follow these rules. No alternative architectures are permitted.
+
+## Visual Directory Structure
+
+```
+ .
+├── .git
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── .gitignore
+├── .pre-commit-config.yaml
+├── .venv/                # Virtual environment (gitignored)
+├── .vscode/              # Optional: Editor settings
+├── COMMERCIAL_LICENSE
+├── LICENSE
+├── README.md
+├── TODO.md               # The only allowed file for TODO to be added in.
+├── config/               # Configuration files
+│   ├── command_patterns.json
+│   ├── keys/
+│   │   └── encrypted_keys.json
+│   ├── output_styles.json
+│   └── settings.json
+├── docs/                 # Documentation
+│   ├── agents_tools/
+│   ├── architecture/
+│   ├── features/
+│   ├── research/         # Only allowed research directory
+│   └── ...
+├── locales/              # Internationalization (i18n)
+│   ├── ar/
+│   │   └── LC_MESSAGES/
+│   │       ├── labeeb.mo
+│   │       └── labeeb.po
+│   └── en/ # etc.
+├── pyproject.toml
+├── requirements.txt
+├── setup.py
+├── scripts/              # Utility scripts
+│   ├── audit_project.py
+│   ├── compile_translations.py
+│   └── ...
+├── src/                  # Main source code
+│   ├── __init__.py
+│   └── labeeb/           # Main application package (renamed from 'app')
+│       ├── __init__.py
+│       ├── __main__.py
+│       ├── ai/
+│       ├── awareness/
+│       ├── command_processing/
+│       ├── core/
+│       ├── data_models/
+│       ├── exceptions/
+│       ├── platform_services/
+│       ├── services/
+│       ├── tools/
+│       ├── ui/
+│       └── utils/
+├── tests/                # All tests (mirrors src/labeeb/ structure)
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── fixtures/
+│   ├── integration/
+│   │   └── labeeb/
+│   ├── unit/
+│   │   └── labeeb/
+│   ├── e2e/
+│   ├── test_files/
+│   └── screenshots/
+└── reports/              # Gitignored: test results, coverage reports
+    ├── coverage/
+    │   ├── htmlcov/
+    │   └── coverage.xml
+    └── test_results/
+```
+
+## Explicit Placement Rules
+
+- Use only the approved directory structure as specified; no alternative architectures are permitted.
+- Remove all `.backup` directories and `.bak` files; use Git for history and backup.
+- Only one `research/` directory is allowed, and it must be inside `docs/` if it contains documentation.
+- List all generated files, logs, caches, coverage reports, and virtual environments in `.gitignore`.
+- Place all source code in `src/` and the main package in `src/labeeb/`.
+- Do not place logs or tests inside `src/`; place logs at the top level (gitignored) and tests in the top-level `tests/` directory.
+- Place utilities and helpers in `src/labeeb/utils/` or `src/utils/` as appropriate.
+- Place documentation in `docs/`, with research consolidated inside.
+- Place config files in `config/`.
+- Place scripts in `scripts/`.
+- Place internationalization files in `locales/`.
+- Place test results and coverage reports in a gitignored `reports/` directory.
+- Use English for folder and file names unless the project is strictly for a non-English-speaking team.
+- Do not use symlinks for source files; physically move files and update imports.
+- Ensure tests in `tests/` mirror the internal structure of `src/labeeb/`.
+- Reference only the approved structure in all documentation, rules, and audit scripts.
+- Update audit files, `README.md`, and `TODO.md` to reflect only the approved structure.
+- Audit scripts must check for and enforce only this architecture.
+- Strictly comply with this structure; no alternative organization methods are allowed.
+
+# Changelog
+- v1.0: Initial conversion to rule-structure-standards format.

@@ -1,0 +1,59 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Labeeb Agent Architecture (MDC)
+
+This document outlines the architecture and design principles for Labeeb's agent system, optimized for local projects operating across multiple platforms.
+
+## Core Components
+
+### Agent
+
+- Serves as the primary interface for Labeeb's AI capabilities.
+- Manages dynamic tool selection and execution.
+- Handles context and state management across sessions and platforms.
+
+## Core Principles
+
+### Agent Lifecycle
+
+- Each agent must have a clearly defined lifecycle: initialization, active operation, suspension, and termination.
+- Support dynamic loading and unloading of agents to optimize resource usage.
+- Make all lifecycle events (start, stop, error, resume) observable for monitoring and debugging.
+
+### Agent Orchestration
+
+- Orchestrate agents using clear coordination mechanisms (task allocation, sequencing, conflict resolution).
+- Support both centralized (hierarchical) and decentralized (peer-to-peer) orchestration models.
+- Enable agents to hand off tasks, collaborate, and synchronize state as required.
+
+### Agent-to-Agent (A2A) Interaction
+
+- Use standardized protocols for agent-to-agent (A2A) communication, supporting both synchronous and asynchronous messaging.
+- Support group communication (broadcast, multicast) and direct messaging, with negotiation and feedback mechanisms.
+
+### Agent State and Context Management
+
+- Each agent must manage its own state and context, persisting relevant information across sessions and platforms.
+- Maintain modular state boundaries between agent-local and shared/global context.
+- Provide mechanisms for state inspection, update, and rollback.
+
+### Modularity and Specialization
+
+- Each agent should encapsulate a specific set of capabilities or responsibilities (high cohesion, loose coupling).
+- Agents must be replaceable and upgradable independently.
+
+### Reliability and Robustness
+
+- Handle errors gracefully, with clear error propagation and recovery strategies.
+- Support monitoring, logging, and alerting for agent health and interactions.
+
+### Discoverability and Transparency
+
+- Register all agents in a central directory or registry with clear documentation of roles, capabilities, and interfaces.
+- Ensure agent interactions and decision logic are transparent and traceable.
+
+# Changelog
+- v1.0: Initial conversion to rule-structure-standards format.

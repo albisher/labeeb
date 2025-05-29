@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Architecture Rules (SmolAgents, Agentic, A2A, MCP)
+
+## Core Principles
+- Use modern OOP with composition over inheritance
+- Enforce strict layer separation and SOLID principles
+- Apply dependency injection throughout the codebase
+- Leverage Python's modern features and type hints
+- Adopt agent-centric architecture using SmolAgents
+- Prioritize local-first, minimal memory/storage, multi-language, and multi-platform support
+- Integrate A2A (Agent-to-Agent) and MCP (Model Context Protocol) as core features
+- Follow naming conventions:
+  - Agents: {Purpose}Agent (e.g., MainAgent)
+  - Models: {Provider}Model (e.g., GeminiModel)
+  - Tools: {Capability}Tool (e.g., TranslationTool)
+  - Capabilities: {Feature}Capability (e.g., FileCapability)
+  - Workflows: {Process}Workflow (e.g., FileWorkflow)
+  - Protocols: {Protocol}Protocol (e.g., A2AProtocol)
+  - Handlers: {Platform}{Feature}Handler (e.g., MacOSFSHandler)
+  - Services: {Feature}Service (e.g., CacheService)
+- Place platform-specific code in respective directories (macos/, linux/, windows/), with common interfaces in common/
+- Organize UI components by interface type: cli/, gui/, web/
+- Create an Agent when complex orchestration, multi-step workflows, or agent-to-agent collaboration is needed. Default to tools otherwise.
+- Create a Tool for atomic, single-purpose, reusable functionality or API integration. Default to tools for new features.
+- Create a Workflow for multi-step, complex, or reusable process patterns. Default to existing workflows if possible.
+- Create a Capability to group related tools, provide feature-level abstraction, or address cross-cutting concerns.
+- Create a Protocol for new communication standards or interface definitions. Default to existing protocols if possible.
+- Use dataclasses for data containers and ABCs for interfaces.
+- Document all public interfaces and follow PEP 8.
+- Keep platform-specific code isolated and support RTL/multi-language.
+- Maintain clear separation of concerns.
+
+## Best Practices
+- Use dataclasses for data containers
+- Implement ABCs for interfaces
+- Use type hints throughout
+- Follow PEP 8 and modern Python conventions
+- Document all public interfaces
+- Keep platform-specific code isolated
+- Support RTL Arabic and multi-language
+- Maintain clear separation of concerns
+- Use dependency injection
+- Follow SOLID principles
+
+## References
+- See docs/agents_tools/agents_and_tools.md for the current list of tools and agents
+- See A2A and MCP sections for agent-to-agent and model-context support
+- See master_arch.md for complete directory structure
+
+@tool-architecture.mdc
+@agent-architecture.mdc
+@capability-architecture.mdc

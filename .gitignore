@@ -1,0 +1,215 @@
+# Labeeb .gitignore (Enforced File Organization)
+
+# Root-level enforcement: Only LICENSE, README, and config allowed in root
+!/LICENSE
+!/README.md
+!/requirements.txt
+!/pyproject.toml
+!/setup.py
+!/COMMERCIAL_LICENSE
+!/config/
+
+# Ignore misplaced test outputs, logs, state, and scripts in root
+/test_*.txt
+/test_*
+/labeeb.log
+/context.json
+/execution_state.json
+/capabilities_registry.json
+/launch.py
+/launch_gui.py
+
+# Ignore logs, caches, and outputs everywhere
+logs/
+log/
+.cache/
+*.log
+*.bak
+*.tmp
+*.swp
+*~
+
+# Ignore test artifacts
+/tests/outputs/
+/tests/results/
+/tests/fixtures/
+/test_files/
+
+# Ignore state/context outside src/labeeb/state
+/context.json
+/execution_state.json
+
+# Ignore registry/config outside src/labeeb/core
+/capabilities_registry.json
+
+# Ignore scripts outside scripts/
+/launch.py
+/launch_gui.py
+
+# Ignore Python cache and venv
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Ignore IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Ignore build and dist
+build/
+dist/
+*.egg-info/
+
+# Ignore coverage and test output
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Ignore Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+
+# Cache files
+.cache/
+.pytest_cache/
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
+reports/
+
+# Logs
+logs/
+*.log
+nohup.out
+
+# IDE specific
+.vscode/
+.idea/
+
+# Other
+*.bak
+*.pyd
+*.pyc
+*.pyo
+
+# Sensitive files
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.env
+*.env.*
+!.env.example
+config/keys/
+config/keys/*.json
+
+# Test and output directories
+tests/results/
+tests/outputs/
+tests/fixtures/
+test_files/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Project specific
+.secret/
+.goose/
+
+# Documentation
+documentation/_build/
+documentation/_static/
+documentation/_templates/
+
+# Backup files
+.backup/
+*.bak
+*.backup
+*.old
+
+# Test outputs
+reports/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Configuration - uncomment the line below if your settings.json contains sensitive information
+# or is intended to be user-specific and not versioned.
+# config/settings.json
+
+# Test outputs
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Ignore results and metrics output
+results/
+metrics/
+logs/
+
+coverage/ 

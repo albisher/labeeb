@@ -1,0 +1,70 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Labeeb Capability Architecture (MDC)
+
+This document defines the architecture and design principles for Labeeb's capability system. The rules herein apply strictly to the concept of a "capability"—not to tools, agents, or workflows.
+
+---
+
+## 1. Core Principles
+
+### 1.1 Composability
+
+- **Atomicity & Reusability:**  
+  Each capability must represent a distinct, self-contained business ability or outcome, abstracted from specific processes, roles, or technologies.
+- **Building Blocks:**  
+  Capabilities should be designed as atomic, reusable components, enabling flexible assembly into more complex, higher-order capabilities or workflows.
+- **Loose Coupling & High Cohesion:**  
+  Capabilities must be loosely coupled with each other, ensuring changes in one do not adversely impact others, while maintaining high cohesion within each capability.
+
+### 1.2 Discoverability
+
+- **Clear Definition:**  
+  Capabilities must be clearly defined in terms of the business outcome or function they enable, independent of implementation details.
+- **Explicit Interfaces:**  
+  Each capability should include explicit input and output specifications, making its use and integration transparent to other capabilities and systems.
+- **Cataloging & Documentation:**  
+  All capabilities must be cataloged and documented to ensure they are easily discoverable and understandable within the organization.
+
+### 1.3 Reliability
+
+- **Robustness & Resilience:**  
+  Capabilities must be robust and resilient, handling errors gracefully and providing clear, meaningful feedback when issues arise.
+- **Independent Validation:**  
+  Each capability should be validated and tested independently to ensure it reliably delivers its defined outcome under expected conditions.
+- **Continuous Improvement:**  
+  Capabilities should be periodically reviewed and improved to maintain alignment with evolving business needs and strategic objectives.
+
+---
+
+## 2. Additional Capability-Centric Principles
+
+- **Focus on the "What":**  
+  Capabilities should focus on the "what" (the business ability delivered), not the "how," "who," or "where," to maintain abstraction and stability even as underlying processes or technologies change.
+- **MECE Principle:**  
+  The capability map should be mutually exclusive and collectively exhaustive (MECE): each capability is unique, and together they cover the full scope of business needs.
+- **Strategic Alignment & Agility:**  
+  Capabilities should be continuously evaluated for dependencies and alignment with strategic priorities, supporting agility and adaptability in the architecture.
+
+---
+
+- Each capability must represent a distinct, self-contained business ability or outcome, abstracted from specific processes, roles, or technologies.
+- Design capabilities as atomic, reusable components for flexible assembly into higher-order capabilities or workflows.
+- Ensure loose coupling and high cohesion between and within capabilities.
+- Clearly define each capability by its business outcome or function, independent of implementation details.
+- Specify explicit input and output interfaces for each capability.
+- Catalog and document all capabilities for easy discovery and understanding.
+- Ensure capabilities are robust and resilient, handling errors gracefully and providing clear feedback.
+- Validate and test each capability independently to ensure reliable delivery of its outcome.
+- Periodically review and improve capabilities to align with evolving business needs.
+- Focus on the "what" (business ability delivered), not the "how," "who," or "where."
+- Ensure the capability map is mutually exclusive and collectively exhaustive (MECE).
+- Continuously evaluate capabilities for dependencies and strategic alignment.
+
+# Changelog
+- v1.0: Initial conversion to rule-structure-standards format.
+
+---

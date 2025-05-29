@@ -1,0 +1,50 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Labeeb Handler Architecture (MDC)
+
+- Each handler must address a single, well-defined event or trigger, performing one primary responsibility.
+- Implement handlers as the smallest executable units, enabling reuse and easy orchestration within workflows or agents.
+- Handlers must be independent and self-contained, with minimal dependencies on other handlers or components.
+- Design handlers to work seamlessly with other handlers, tools, agents, and workflows.
+- Support chaining and composition, so multiple handlers can be orchestrated to address complex event processing scenarios.
+- Each handler must expose clear input and output interfaces to facilitate integration.
+- Document all handlers thoroughly, including purpose, expected inputs/outputs, and usage examples.
+- Catalog handlers in a central registry or directory for easy search, selection, and reuse.
+- Use descriptive, unique names for handlers that reflect their function and event scope.
+- Handle errors gracefully, with clear error reporting and recovery strategies.
+- Support logging, monitoring, and debugging in each handler for maintenance and troubleshooting.
+- Test handlers both in isolation and as part of larger event-driven flows to ensure reliable operation.
+- Make handler logic explicit and auditable, with each decision point and action clearly defined.
+- Ensure execution history and state transitions are traceable for debugging, compliance, and optimization.
+- Design handlers to operate consistently across different platforms, abstracting away platform-specific details where possible.
+- Use standardized formats and protocols for handler definitions and event processing to ensure portability and interoperability.
+- Each handler definition file must encapsulate a single handler function or event response (one handler per file).
+- Use kebab-case filenames that clearly describe the handler's function or event (e.g., user-created-handler.mdc).
+- Start each file with a YAML frontmatter block specifying: description, event, inputs, outputs, dependencies, alwaysApply.
+- Define the handler's logic as a clear, ordered list of steps, specifying the action, required inputs, and expected outputs for each step.
+- Keep handler definitions focused and modular; decompose complex event logic into multiple handlers if needed.
+- Reference any supporting files or templates using @filename.ext at the end of the file.
+
+## Example Handler File Structure
+
+```
+---
+description: Handles the event when a new user is created, triggering a welcome email.
+event: user_created
+inputs: [user_id, user_email]
+outputs: [email_status]
+dependencies: [send-welcome-email-tool]
+alwaysApply: false
+---
+
+- Receive the `user_created` event with `user_id` and `user_email`.
+- Send a welcome email using `send-welcome-email-tool`.
+- Log the status of the email delivery.
+@send-welcome-email-tool.mdc
+```
+
+# Changelog
+- v1.0: Initial version, compliant with rule-structure-standards.mdc.
