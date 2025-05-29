@@ -53,15 +53,18 @@ This document defines and enforces the required file and folder structure for th
 │   └── labeeb/           # Main application package (renamed from 'app')
 │       ├── __init__.py
 │       ├── __main__.py
-│       ├── ai/
-│       ├── awareness/
-│       ├── command_processing/
+│       ├── agents/           # Agents
+│       ├── models/           # Models (all data models go here, optionally as data_models/)
+│       │   └── data_models/  # (optional) Data models subpackage
+│       ├── tools/            # Tools
+│       ├── capabilities/     # Capabilities
+│       ├── workflows/        # Workflows
+│       ├── protocols/        # Protocols
+│       ├── handlers/         # Handlers (with platform subfolders as needed)
+│       ├── services/         # Services
+│       │   └── platform_services/  # Platform-specific services
 │       ├── core/
-│       ├── data_models/
 │       ├── exceptions/
-│       ├── platform_services/
-│       ├── services/
-│       ├── tools/
 │       ├── ui/
 │       └── utils/
 ├── tests/                # All tests (mirrors src/labeeb/ structure)
@@ -89,6 +92,16 @@ This document defines and enforces the required file and folder structure for th
 - Only one `research/` directory is allowed, and it must be inside `docs/` if it contains documentation.
 - List all generated files, logs, caches, coverage reports, and virtual environments in `.gitignore`.
 - Place all source code in `src/` and the main package in `src/labeeb/`.
+- Place **Agents** in `src/labeeb/agents/`.
+- Place **Models** in `src/labeeb/models/`.
+- Place all **data models** in `src/labeeb/models/` (optionally as `src/labeeb/models/data_models/`).
+- Place **Tools** in `src/labeeb/tools/`.
+- Place **Capabilities** in `src/labeeb/capabilities/`.
+- Place **Workflows** in `src/labeeb/workflows/`.
+- Place **Protocols** in `src/labeeb/protocols/`.
+- Place **Handlers** in `src/labeeb/handlers/` (with platform-specific subfolders as needed).
+- Place **Services** in `src/labeeb/services/`.
+- Place all **platform-specific services** in `src/labeeb/services/platform_services/`.
 - Do not place logs or tests inside `src/`; place logs at the top level (gitignored) and tests in the top-level `tests/` directory.
 - Place utilities and helpers in `src/labeeb/utils/` or `src/utils/` as appropriate.
 - Place documentation in `docs/`, with research consolidated inside.
@@ -105,4 +118,6 @@ This document defines and enforces the required file and folder structure for th
 - Strictly comply with this structure; no alternative organization methods are allowed.
 
 # Changelog
+- v1.2: Clarified placement for data models and platform-specific services; removed references to top-level data_models/ and platform_services/.
+- v1.1: Added explicit guidance and dedicated folders for Agents, Models, Tools, Capabilities, Workflows, Protocols, Handlers, and Services.
 - v1.0: Initial conversion to rule-structure-standards format.

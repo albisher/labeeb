@@ -1,0 +1,57 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Labeeb Service Architecture (MDC)
+
+- Each service must deliver a single, well-defined business or technical function, encapsulating its logic and responsibilities.
+- Services must be self-contained, with clear boundaries and minimal dependencies on other services.
+- Expose well-defined interfaces (APIs) for all service interactions.
+- Design services for easy integration and orchestration with other services, tools, agents, workflows, and handlers.
+- Support service composition to build higher-level business capabilities from smaller, focused services.
+- Each service must expose clear input and output contracts to ensure seamless interoperability.
+- Document all services thoroughly, including purpose, endpoints, expected inputs/outputs, authentication requirements, and usage examples.
+- Catalog all services in a central registry or service directory for easy discovery, selection, and reuse.
+- Assign each service a unique, descriptive name reflecting its function.
+- Ensure services are robust, with comprehensive error handling, clear error messages, and recovery strategies.
+- Support logging, monitoring, and health checks for all services.
+- Test services both in isolation and as part of integrated flows to ensure reliable operation.
+- Design services to scale horizontally or vertically as needed, supporting high availability and responsiveness.
+- Clearly document and monitor performance requirements and limits for each service.
+- Enforce authentication and authorization as appropriate for each service's function and data sensitivity.
+- Protect sensitive data in transit and at rest, following best security practices.
+- Design services to run consistently across multiple platforms and deployment environments.
+- Use standardized protocols (e.g., HTTP/REST, gRPC) and data formats (e.g., JSON, Protobuf) for service communication.
+- Each service definition file must describe a single service (one service per file).
+- Use kebab-case filenames that clearly describe the service's function (e.g., user-authentication-service.mdc).
+- Start each file with a YAML frontmatter block specifying: description, endpoints, inputs, outputs, dependencies, auth, alwaysApply.
+- Define the service's logic and responsibilities as a clear, ordered list of steps or operations, specifying the action, required inputs, and expected outputs for each operation.
+- Keep service definitions focused and modular; decompose complex services into smaller, specialized services if needed.
+- Reference any supporting files or templates using @filename.ext at the end of the file.
+
+## Minimal Service File Example
+
+```
+---
+description: Provides user authentication via email and password.
+endpoints: [POST /login, POST /register]
+inputs: [email, password]
+outputs: [auth_token, user_id]
+dependencies: [user-database, password-hash-tool]
+auth: none (for login/register endpoints)
+alwaysApply: false
+---
+
+- Receive authentication request with email and password.
+- Validate input parameters.
+- Hash the password using `password-hash-tool`.
+- Query the `user-database` for matching credentials.
+- If valid, generate and return `auth_token` and `user_id`.
+- Log authentication attempt and result.
+@password-hash-tool.mdc
+@user-database.mdc
+```
+
+# Changelog
+- v1.0: Initial version, compliant with rule-structure-standards.mdc.
