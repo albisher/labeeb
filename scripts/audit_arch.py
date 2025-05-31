@@ -28,19 +28,37 @@ class ArchitectureAuditor:
         self.required_dirs = {
             'src/labeeb': {
                 'required_files': ['__init__.py', '__main__.py'],
-                'required_dirs': ['ai', 'awareness', 'command_processing',
-                                'core', 'data_models', 'exceptions',
-                                'platform_services', 'services', 'tools', 'ui', 'utils']
+                'required_dirs': [
+                    'agents',
+                    'models',
+                    'tools',
+                    'capabilities',
+                    'workflows',
+                    'protocols',
+                    'handlers',
+                    'services',
+                    'core',
+                    'exceptions',
+                    'ui',
+                    'utils'
+                ]
+            },
+            'src/labeeb/models': {
+                'required_dirs': ['data_models']  # Optional but allowed
+            },
+            'src/labeeb/services': {
+                'required_dirs': ['platform_services']
             },
             'tests': {
                 'required_files': ['__init__.py', 'conftest.py'],
-                'required_dirs': ['fixtures', 'integration', 'unit', 'e2e', 'test_files']
+                'required_dirs': ['fixtures', 'integration', 'unit', 'e2e', 'test_files', 'screenshots']
             },
             'docs': {
                 'required_dirs': ['agents_tools', 'architecture', 'features', 'research']
             },
             'config': {
-                'required_files': ['settings.json']
+                'required_files': ['settings.json', 'command_patterns.json', 'output_styles.json'],
+                'required_dirs': ['keys']
             },
             'locales': {
                 'required_dirs': ['ar/LC_MESSAGES', 'en/LC_MESSAGES']
@@ -276,13 +294,22 @@ def main():
         'violations': violations
     }
     
-    # Save report to tests/results
-    results_dir = Path(project_root) / 'tests' / 'results'
-    results_dir.mkdir(exist_ok=True)
+    # Ensure reports directory exists
+    reports_dir = Path(project_root) / 'reports' / 'test_results'
+    reports_dir.mkdir(parents=True, exist_ok=True)
     
-    report_path = results_dir / 'architecture_audit.json'
+    # Write report to reports/test_results
+    report_path = reports_dir / 'architecture_audit.json'
     with open(report_path, 'w') as f:
         json.dump(report, f, indent=2)
+        
+    # Print violations to console for immediate feedback
+    if violations:
+        print("\nViolations found:")
+        for v in violations:
+            print(f"- {v['message']} ({v['path']})")
+    else:
+        print("\nNo violations found!")
         
     # Update TODO.md with audit results (root only)
     todo_path = Path(project_root) / 'TODO.md'
