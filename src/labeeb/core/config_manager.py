@@ -5,17 +5,15 @@ This module provides centralized configuration management for the Labeeb applica
 It handles loading, validating, and accessing configuration settings from various sources,
 including environment variables, configuration files, and command-line arguments.
 
-The module includes:
-- Configuration loading and validation
-- Environment variable handling
-- Default value management
-- Configuration file support
-- Type conversion and validation
-
-Example:
-    >>> config = ConfigManager()
-    >>> model_type = config.get("model_type", "local")
-    >>> ollama_url = config.get("ollama_base_url")
+---
+description: Manages application configuration and settings
+endpoints: [get, set, save, reload]
+inputs: [key, value]
+outputs: [config_value]
+dependencies: [FileOperationConfig]
+auth: none
+alwaysApply: true
+---
 """
 
 import os
@@ -38,7 +36,7 @@ class LoggingConfig:
     """Configuration for logging settings."""
 
     log_level: str = "INFO"
-    log_file: str = "log/labeeb.log"
+    log_file: str = "logs/labeeb.log"
     log_errors: bool = True
     log_commands: bool = True
     last_updated: datetime = field(default_factory=datetime.now)
@@ -48,11 +46,35 @@ class LoggingConfig:
 class FileOperationConfig:
     """Configuration for file operations."""
 
-    max_results: int = 20
-    max_content_length: int = 1000
-    default_directory: str = "data"
-    test_directory: str = "tests"
+    base_dir: str = os.path.expanduser("~/Documents/labeeb")
+    screenshots_dir: str = "screenshots"
+    downloads_dir: str = "downloads"
+    temp_dir: str = "temp"
+    logs_dir: str = "logs"
+    config_dir: str = "config"
     last_updated: datetime = field(default_factory=datetime.now)
+
+    def get_full_path(self, subdir: str) -> str:
+        """Get the full path for a subdirectory."""
+        return os.path.join(self.base_dir, subdir)
+
+    def ensure_directories(self) -> bool:
+        """Ensure all required directories exist."""
+        try:
+            dirs = [
+                self.base_dir,
+                self.get_full_path(self.screenshots_dir),
+                self.get_full_path(self.downloads_dir),
+                self.get_full_path(self.temp_dir),
+                self.get_full_path(self.logs_dir),
+                self.get_full_path(self.config_dir)
+            ]
+            for dir_path in dirs:
+                os.makedirs(dir_path, exist_ok=True)
+            return True
+        except Exception as e:
+            logger.error(f"Error creating directories: {e}")
+            return False
 
 
 @dataclass
@@ -70,7 +92,7 @@ class Config:
 
     default_ai_provider: str = "ollama"
     ollama_base_url: str = "http://localhost:11434"
-    default_ollama_model: str = "gemma3:4b"
+    default_ollama_model: str = "gemma3:latest"
     text_model: str = "smolvlm"
     vision_model: str = "smolvlm"
     stt_model: str = "whisper"
@@ -95,70 +117,96 @@ class ConfigManager:
     A class to manage configuration settings for Labeeb.
 
     This class provides a centralized way to manage configuration settings,
-    supporting multiple configuration sources and validation. It handles:
-    - Environment variables
-    - Configuration files
-    - Default values
-    - Type conversion
-    - Value validation
-
-    Attributes:
-        config_dir (Path): Directory for configuration files
-        settings_file (Path): Path to the main configuration file
-        user_settings_file (Path): Path to the user-specific configuration file
-        config (Config): Current configuration settings
+    supporting multiple configuration sources and validation.
     """
 
-    def __init__(self, settings_file: str = "config/labeeb_config.json"):
-        self.settings_file = settings_file
-        self._ensure_config_file()
+    def __init__(self):
+        """Initialize the configuration manager."""
+        self.file_config = FileOperationConfig()
         self.config = self._load_config()
         self._validate_config()
-        self.valid_keys = {
-            "default_ai_provider",
-            "ollama_base_url",
-            "default_ollama_model",
-            "text_model",
-            "vision_model",
-            "stt_model",
-            "tts_model",
-            "shell_safe_mode",
-            "shell_dangerous_check",
-            "interactive_mode",
-            "use_gui",
-            "use_structured_ai_responses",
-            "prefer_json_format",
-            "output_verbosity",
-            "language_support",
-            "use_fp32",
-            "openweathermap_api_key",
-        }
-
-    def _ensure_config_file(self):
-        config_dir = os.path.dirname(self.settings_file)
-        if config_dir and not os.path.exists(config_dir):
-            os.makedirs(config_dir, exist_ok=True)
-        if not os.path.exists(self.settings_file) or os.path.getsize(self.settings_file) == 0:
-            with open(self.settings_file, "w") as f:
-                f.write("{}")
 
     def _load_config(self) -> Config:
         """Load configuration from files."""
-        self._ensure_config_file()
-        with open(self.settings_file, "r") as f:
-            try:
-                config_dict = json.load(f)
-            except json.JSONDecodeError:
-                # If file is empty or invalid, reset to '{}'
-                with open(self.settings_file, "w") as fw:
-                    fw.write("{}")
-                config_dict = {}
+        try:
+            # First try user-specific config
+            user_config_path = os.path.join(
+                self.file_config.get_full_path(self.file_config.config_dir),
+                "labeeb_config.json"
+            )
+            
+            # Then try project-level config
+            project_config_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+                "config",
+                "labeeb_config.json"
+            )
+            
+            # Try to load user config first, fall back to project config
+            config_path = user_config_path if os.path.exists(user_config_path) else project_config_path
+            
+            if os.path.exists(config_path):
+                with open(config_path, "r", encoding="utf-8") as f:
+                    config_dict = json.load(f)
+            else:
+                # Create default config
+                config_dict = self._get_default_config()
+                # Save to user config directory
+                os.makedirs(os.path.dirname(user_config_path), exist_ok=True)
+                with open(user_config_path, "w", encoding="utf-8") as f:
+                    json.dump(config_dict, f, indent=4)
+            
+            return self._dict_to_config(config_dict)
+            
+        except Exception as e:
+            logger.error(f"Error loading config: {e}")
+            return Config()
 
-        # Convert dict to Config object
-        return self._dict_to_config(config_dict)
+    def _get_default_config(self) -> Dict[str, Any]:
+        """Get default configuration."""
+        return {
+            "default_ai_provider": "ollama",
+            "ollama_base_url": "http://localhost:11434",
+            "default_ollama_model": "gemma3:latest",
+            "text_model": "smolvlm",
+            "vision_model": "smolvlm",
+            "stt_model": "whisper",
+            "tts_model": "none",
+            "shell_safe_mode": True,
+            "shell_dangerous_check": True,
+            "interactive_mode": True,
+            "use_gui": False,
+            "use_structured_ai_responses": True,
+            "prefer_json_format": True,
+            "output_verbosity": "normal",
+            "language_support": {
+                "english": True,
+                "arabic": True,
+                "last_updated": datetime.now().isoformat()
+            },
+            "file_operation_settings": {
+                "base_dir": os.path.expanduser("~/Documents/labeeb"),
+                "screenshots_dir": "screenshots",
+                "downloads_dir": "downloads",
+                "temp_dir": "temp",
+                "logs_dir": "logs",
+                "config_dir": "config",
+                "last_updated": datetime.now().isoformat()
+            },
+            "logging": {
+                "log_level": "INFO",
+                "log_file": "logs/labeeb.log",
+                "log_errors": True,
+                "log_commands": True,
+                "last_updated": datetime.now().isoformat()
+            },
+            "last_updated": datetime.now().isoformat(),
+            "use_fp32": True,
+            "openweathermap_api_key": ""
+        }
 
     def _dict_to_config(self, config_dict: Dict[str, Any]) -> Config:
-        """Convert dictionary to Config object, filtering out unknown keys."""
+        """Convert dictionary to Config object."""
         # Handle nested configs
         if "language_support" in config_dict:
             lang = config_dict["language_support"]
@@ -169,6 +217,7 @@ class ConfigManager:
                     except Exception:
                         lang["last_updated"] = datetime.now()
                 config_dict["language_support"] = LanguageConfig(**lang)
+                
         if "file_operation_settings" in config_dict:
             fos = config_dict["file_operation_settings"]
             if isinstance(fos, dict):
@@ -178,6 +227,7 @@ class ConfigManager:
                     except Exception:
                         fos["last_updated"] = datetime.now()
                 config_dict["file_operation_settings"] = FileOperationConfig(**fos)
+                
         if "logging" in config_dict:
             log = config_dict["logging"]
             if isinstance(log, dict):
@@ -187,49 +237,19 @@ class ConfigManager:
                     except Exception:
                         log["last_updated"] = datetime.now()
                 config_dict["logging"] = LoggingConfig(**log)
+                
         # Top-level last_updated
         if "last_updated" in config_dict and isinstance(config_dict["last_updated"], str):
             try:
                 config_dict["last_updated"] = datetime.fromisoformat(config_dict["last_updated"])
             except Exception:
                 config_dict["last_updated"] = datetime.now()
-        # Only keep keys that are fields in Config
-        config_fields = set(f.name for f in Config.__dataclass_fields__.values())
-        filtered = {k: v for k, v in config_dict.items() if k in config_fields}
-        if "openweathermap_api_key" not in filtered:
-            filtered["openweathermap_api_key"] = ""
-        return Config(**filtered)
-
-    def _interpolate_value(self, value: Any) -> Any:
-        """Interpolate environment variables in a value, recursively for nested dicts/lists."""
-        if isinstance(value, str):
-            # Handle environment variable interpolation
-            if value.startswith("${") and value.endswith("}"):
-                var_name = value[2:-1]
-                if ":-" in var_name:
-                    var_name, default = var_name.split(":-", 1)
-                    return os.environ.get(var_name, default)
-                return os.environ.get(var_name, value)
-
-            # Also interpolate any ${VAR} or ${VAR:-default} inside the string
-            def replacer(match: re.Match) -> str:
-                var = match.group(1)
-                if ":-" in var:
-                    var_name, default = var.split(":-", 1)
-                    return os.environ.get(var_name, default)
-                return os.environ.get(var, match.group(0))
-
-            return re.sub(r"\${([^}]+)}", replacer, value)
-        elif isinstance(value, dict):
-            return {k: self._interpolate_value(v) for k, v in value.items()}
-        elif isinstance(value, list):
-            return [self._interpolate_value(item) for item in value]
-        return value
+                
+        return Config(**config_dict)
 
     def get(self, key: str, default: Optional[T] = None) -> Union[T, Any]:
         """Get a configuration value."""
-        value = getattr(self.config, key, default)
-        return self._interpolate_value(value)
+        return getattr(self.config, key, default)
 
     def set(self, key: str, value: Any) -> None:
         """Set a configuration value."""
@@ -239,18 +259,26 @@ class ConfigManager:
         self.config.last_updated = datetime.now()
 
     def save(self) -> None:
-        """Save configuration to files."""
-        self._validate_config()
-
-        # Convert Config object to dict
-        config_dict = self._config_to_dict(self.config)
-
-        # Save settings.json
-        config_dir = os.path.dirname(self.settings_file)
-        if config_dir and not os.path.exists(config_dir):
-            os.makedirs(config_dir, exist_ok=True)
-        with open(self.settings_file, "w") as f:
-            json.dump(config_dict, f, indent=4)
+        """Save configuration to file."""
+        try:
+            config_path = os.path.join(
+                self.file_config.get_full_path(self.file_config.config_dir),
+                "labeeb_config.json"
+            )
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(config_path), exist_ok=True)
+            
+            # Convert Config to dict
+            config_dict = self._config_to_dict(self.config)
+            
+            # Save to file
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(config_dict, f, indent=4)
+                
+        except Exception as e:
+            logger.error(f"Error saving config: {e}")
+            raise
 
     def _config_to_dict(self, config: Config) -> Dict[str, Any]:
         """Convert Config object to dictionary."""
@@ -275,10 +303,12 @@ class ConfigManager:
                 "last_updated": config.language_support.last_updated.isoformat(),
             },
             "file_operation_settings": {
-                "max_results": config.file_operation_settings.max_results,
-                "max_content_length": config.file_operation_settings.max_content_length,
-                "default_directory": config.file_operation_settings.default_directory,
-                "test_directory": config.file_operation_settings.test_directory,
+                "base_dir": config.file_operation_settings.base_dir,
+                "screenshots_dir": config.file_operation_settings.screenshots_dir,
+                "downloads_dir": config.file_operation_settings.downloads_dir,
+                "temp_dir": config.file_operation_settings.temp_dir,
+                "logs_dir": config.file_operation_settings.logs_dir,
+                "config_dir": config.file_operation_settings.config_dir,
                 "last_updated": config.file_operation_settings.last_updated.isoformat(),
             },
             "logging": {

@@ -43,6 +43,7 @@ from labeeb.core.config_manager import ConfigManager
 from labeeb.core.ai.agent import LabeebAgent
 from labeeb.core.ai.workflows.base_workflow import LabeebWorkflow
 from labeeb.tools.base_tool import BaseAgentTool
+from labeeb.utils.platform_utils import ensure_labeeb_directories
 
 # Set up logging
 logger = get_logger(__name__)
@@ -93,6 +94,11 @@ class Labeeb:
             self.arabic_support = True
             self.rtl_support = True
 
+            # Ensure Labeeb directories exist
+            self.base_dir = ensure_labeeb_directories()
+            if not self.base_dir:
+                raise ConfigurationError("Failed to create Labeeb directories")
+
             # Initialize platform manager with mode awareness
             self.platform_manager = PlatformManager()
             platform_name = get_platform_name()
@@ -105,11 +111,7 @@ class Labeeb:
 
             # Load configuration from file if not provided
             if config is None:
-                config_path = os.path.join(
-                    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                    "config",
-                    "settings.json",
-                )
+                config_path = os.path.join(self.base_dir, "config", "settings.json")
                 if os.path.exists(config_path):
                     with open(config_path, "r", encoding="utf-8") as f:
                         self.config = json.load(f)

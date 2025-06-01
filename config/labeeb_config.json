@@ -1,0 +1,40 @@
+{
+    "default_ai_provider": "ollama",
+    "ollama_base_url": "http://localhost:11434",
+    "default_ollama_model": "gemma3:latest",
+    "text_model": "smolvlm",
+    "vision_model": "smolvlm",
+    "stt_model": "whisper",
+    "tts_model": "none",
+    "shell_safe_mode": true,
+    "shell_dangerous_check": true,
+    "interactive_mode": true,
+    "use_gui": false,
+    "use_structured_ai_responses": true,
+    "prefer_json_format": true,
+    "output_verbosity": "normal",
+    "language_support": {
+        "english": true,
+        "arabic": true,
+        "last_updated": "2025-06-01T20:56:45.151151"
+    },
+    "file_operation_settings": {
+        "base_dir": "/Users/amac/Documents/labeeb",
+        "screenshots_dir": "screenshots",
+        "downloads_dir": "downloads",
+        "temp_dir": "temp",
+        "logs_dir": "logs",
+        "config_dir": "config",
+        "last_updated": "2025-06-01T20:56:45.151154"
+    },
+    "logging": {
+        "log_level": "INFO",
+        "log_file": "log/labeeb.log",
+        "log_errors": true,
+        "log_commands": true,
+        "last_updated": "2025-06-01T20:56:45.151155"
+    },
+    "last_updated": "2025-06-01T20:56:45.151160",
+    "use_fp32": true,
+    "openweathermap_api_key": ""
+}

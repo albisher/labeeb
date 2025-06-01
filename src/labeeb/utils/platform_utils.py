@@ -165,3 +165,27 @@ def is_interactive_session():
         return True
 
     return False
+
+
+def ensure_labeeb_directories():
+    """
+    Ensure all required Labeeb directories exist in the user's Documents folder.
+    """
+    try:
+        base_dir = os.path.expanduser("~/Documents/labeeb")
+        dirs = [
+            base_dir,
+            os.path.join(base_dir, "screenshots"),
+            os.path.join(base_dir, "downloads"),
+            os.path.join(base_dir, "temp"),
+            os.path.join(base_dir, "logs"),
+            os.path.join(base_dir, "config")
+        ]
+        
+        for dir_path in dirs:
+            os.makedirs(dir_path, exist_ok=True)
+            
+        return base_dir
+    except Exception as e:
+        print(f"Error creating Labeeb directories: {e}")
+        return None
