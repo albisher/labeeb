@@ -1,60 +1,62 @@
+"""
+Screenshot tool for capturing screen images.
+
+This module provides functionality to take screenshots of the screen.
+"""
+
 import os
-import sys
-import subprocess
 import logging
+import subprocess
 from datetime import datetime
-from typing import Optional
-from labeeb.core.config_manager import ConfigManager
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 class ScreenshotTool:
+    """Tool for taking screenshots."""
+    
     def __init__(self):
-        self.config_manager = ConfigManager()
-        self.file_config = self.config_manager.get("file_operation_settings")
-
-    def take_screenshot(self, filename: Optional[str] = None) -> str:
+        """Initialize the screenshot tool."""
+        self.output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "output", "screenshots")
+        os.makedirs(self.output_dir, exist_ok=True)
+        
+    def take_screenshot(self, filename: str = None) -> str:
         """
-        Take a screenshot and save it to the screenshots directory.
-
+        Take a screenshot of the screen.
+        
         Args:
-            filename: Optional filename for the screenshot. If not provided,
+            filename: Optional filename to save the screenshot. If not provided,
                      a timestamp-based name will be generated.
-
+                     
         Returns:
-            str: Path to the saved screenshot file
+            str: Path to the saved screenshot file.
+            
+        Raises:
+            Exception: If the screenshot capture fails.
         """
         try:
-            # Get screenshots directory from config
-            screenshots_dir = self.file_config.get_full_path(self.file_config.screenshots_dir)
-            os.makedirs(screenshots_dir, exist_ok=True)
-
-            # Generate filename if not provided
-            if not filename:
+            if filename is None:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"screenshot_{timestamp}.png"
-
-            # Ensure filename has .png extension
-            if not filename.lower().endswith('.png'):
-                filename += '.png'
-
-            # Full path for the screenshot
-            filepath = os.path.join(screenshots_dir, filename)
-
-            # Take screenshot based on platform
-            if sys.platform == "darwin":  # macOS
-                subprocess.run(["screencapture", filepath])
-            elif sys.platform == "linux":
-                subprocess.run(["gnome-screenshot", "-f", filepath])
-            elif sys.platform == "win32":
-                import pyautogui
-                screenshot = pyautogui.screenshot()
-                screenshot.save(filepath)
-            else:
-                raise OSError(f"Unsupported platform: {sys.platform}")
-
-            return filepath
-
+                
+            # Ensure filename is in the output directory
+            if not os.path.isabs(filename):
+                filename = os.path.join(self.output_dir, filename)
+                
+            # Create parent directories if they don't exist
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            
+            # Take screenshot using screencapture command
+            subprocess.run(["screencapture", "-x", filename], check=True)
+            
+            logger.info(f"Screenshot saved to: {filename}")
+            return filename
+            
+        except subprocess.CalledProcessError as e:
+            error_msg = f"Failed to take screenshot: {e}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
         except Exception as e:
-            logger.error(f"Error taking screenshot: {str(e)}")
-            raise 
+            error_msg = f"Error taking screenshot: {e}"
+            logger.error(error_msg)
+            raise Exception(error_msg) 
