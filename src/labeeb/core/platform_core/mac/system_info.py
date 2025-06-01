@@ -7,7 +7,7 @@ It uses various macOS-specific commands to gather detailed system information.
 
 from typing import Dict, Any
 import subprocess
-from labeeb.platform_services.common.system_info import BaseSystemInfoGatherer
+from labeeb.services.platform_services.common.system_info import BaseSystemInfoGatherer
 
 
 class MacSystemInfoGatherer(BaseSystemInfoGatherer):

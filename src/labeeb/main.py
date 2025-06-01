@@ -21,7 +21,7 @@ from datetime import datetime
 import asyncio
 import arabic_reshaper
 from bidi.algorithm import get_display
-from labeeb.services.platform_services.common import platform_utils
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 # Add src directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -95,8 +95,8 @@ class Labeeb:
 
             # Initialize platform manager with mode awareness
             self.platform_manager = PlatformManager()
-            platform_name = platform_utils.get_platform_name()
-            if platform_name not in ["macos", "linux", "windows"]:
+            platform_name = get_platform_name()
+            if not self.platform_manager.is_platform_supported():
                 raise ConfigurationError(f"Unsupported platform: {platform_name}")
 
             # Initialize platform components
@@ -204,7 +204,7 @@ Type 'help' for available commands or ask me anything!
 
     def _get_platform_specific_path(self) -> str:
         """Get platform-specific directory path."""
-        system = platform_utils.get_platform_name().lower()
+        system = get_platform_name().lower()
         if system == "darwin":
             return "macos"
         elif system == "windows":

@@ -196,6 +196,7 @@ class ShellHandler:
         """
         # Get platform-specific shell handler
         platform_manager = PlatformManager()
+        platform_manager.initialize()
         self._platform_handler = platform_manager.get_handler("shell")
 
         if self._platform_handler is None:

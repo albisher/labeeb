@@ -24,7 +24,7 @@ from typing import Dict, Any, List, Optional
 from ...utils import run_command
 import arabic_reshaper
 from bidi.algorithm import get_display
-from labeeb.services.platform_services.common import platform_utils
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 
 class BaseBrowserHandler:
@@ -37,7 +37,7 @@ class BaseBrowserHandler:
             shell_handler: Optional shell handler instance for executing commands
         """
         self.shell_handler = shell_handler
-        self.system = platform_utils.get_platform_name().lower()
+        self.system = get_platform_name().lower()
         self._rtl_support = False
         self._text_direction = "ltr"
 

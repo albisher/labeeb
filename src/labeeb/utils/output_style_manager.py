@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Dict, Optional
 import arabic_reshaper
 from bidi.algorithm import get_display
-from ..core.platform_core import get_platform_name
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 
 class OutputStyleManager:

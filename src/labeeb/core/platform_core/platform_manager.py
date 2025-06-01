@@ -1,13 +1,24 @@
 """
-Platform manager for Labeeb.
+Platform manager service for Labeeb.
 
-This module provides a central manager for platform-specific functionality,
+This service provides a central manager for platform-specific functionality,
 coordinating between different platform handlers and ensuring proper isolation.
+Following service-architecture.mdc and handler-architecture.mdc rules.
+
+---
+description: Manages platform-specific functionality and handlers
+endpoints: [get_handler, get_platform_info, initialize, cleanup]
+inputs: [handler_type, platform_name]
+outputs: [handler_instance, platform_info]
+dependencies: [platform_utils, handlers]
+auth: none
+alwaysApply: true
+---
 """
 
 import os
 import logging
-from typing import Dict, Any, Optional, List, Type
+from typing import Dict, Any, Optional, List, Type, ClassVar
 from labeeb.core.platform_core.handlers.base_handler import BaseHandler
 from labeeb.core.platform_core.handlers.mac.input_handler import MacInputHandler
 from labeeb.core.platform_core.handlers.mac.audio_handler import MacAudioHandler
@@ -15,111 +26,129 @@ from labeeb.core.platform_core.handlers.mac.usb_handler import MacUSBHandler
 from labeeb.services.platform_services.common.system_info import BaseSystemInfoGatherer
 from .browser_handler import BaseBrowserHandler
 from .i18n import gettext as _, is_rtl, get_current_language, setup_language
-from labeeb.services.platform_services.common import platform_utils
+from labeeb.services.platform_services.common.platform_utils import (
+    get_os_identifier,
+    get_platform_name,
+    PLATFORM_MAP
+)
 
 logger = logging.getLogger(__name__)
 
 
 class PlatformManager:
-    """Manager for platform-specific functionality."""
+    """Manager for platform-specific functionality.
     
-    # Supported platforms
-    SUPPORTED_PLATFORMS = {"darwin": "macos", "linux": "linux", "win32": "windows"}
+    This is a singleton service that manages platform-specific handlers and functionality.
+    Following service-architecture.mdc: single responsibility, clear interfaces, and proper error handling.
+    """
     
-    # Supported languages with RTL information
-    SUPPORTED_LANGUAGES = {
-        # Primary Languages (Arabic and its variants)
-        "ar": {"name": "Arabic", "rtl": True, "variants": ["ar-SA", "ar-KW", "ar-MA", "ar-EG"]},
-        "ar-SA": {"name": "Saudi Arabic", "rtl": True},
-        "ar-KW": {"name": "Kuwaiti Arabic", "rtl": True},
-        "ar-MA": {"name": "Moroccan Arabic", "rtl": True},
-        "ar-EG": {"name": "Egyptian Arabic", "rtl": True},
-        "ar-AE": {"name": "Emirati Arabic", "rtl": True},
-        "ar-QA": {"name": "Qatari Arabic", "rtl": True},
-        "ar-BH": {"name": "Bahraini Arabic", "rtl": True},
-        "ar-OM": {"name": "Omani Arabic", "rtl": True},
-        "ar-YE": {"name": "Yemeni Arabic", "rtl": True},
-        "ar-SD": {"name": "Sudanese Arabic", "rtl": True},
-        "ar-LY": {"name": "Libyan Arabic", "rtl": True},
-        "ar-DZ": {"name": "Algerian Arabic", "rtl": True},
-        "ar-TN": {"name": "Tunisian Arabic", "rtl": True},
-        # Secondary Languages
-        "en": {"name": "English", "rtl": False},
-        "fr": {"name": "French", "rtl": False, "priority": "secondary"},
-        "es": {"name": "Spanish", "rtl": False, "priority": "secondary"},
+    # Singleton instance
+    _instance: ClassVar[Optional['PlatformManager']] = None
+    
+    # Supported platforms using canonical names
+    SUPPORTED_PLATFORMS = {
+        "macos": "macos",
+        "windows": "windows",
+        "linux": "linux"
     }
     
+    # Platform-specific handler mappings
     _system_info_gatherers: Dict[str, Type[BaseSystemInfoGatherer]] = {
-        "Darwin": None,  # Will be lazily loaded
-        "Windows": None,  # Will be lazily loaded
-        "Linux": None,  # Will be lazily loaded
+        "macos": None,  # Will be lazily loaded
+        "windows": None,  # Will be lazily loaded
+        "linux": None,  # Will be lazily loaded
     }
     
     _shell_handlers: Dict[str, Any] = {
-        "Darwin": None,  # Will be lazily loaded
-        "Windows": None,  # TODO: Implement Windows shell handler
-        "Linux": None,  # TODO: Implement Linux shell handler
+        "macos": None,  # Will be lazily loaded
+        "windows": None,  # TODO: Implement Windows shell handler
+        "linux": None,  # TODO: Implement Linux shell handler
     }
     
     _browser_handlers: Dict[str, Any] = {
-        "Darwin": None,  # Will be lazily loaded
-        "Windows": None,  # TODO: Implement Windows browser handler
-        "Linux": None,  # TODO: Implement Linux browser handler
+        "macos": None,  # Will be lazily loaded
+        "windows": None,  # TODO: Implement Windows browser handler
+        "linux": None,  # TODO: Implement Linux browser handler
     }
     
-    def __init__(self):
-        """Initialize the platform manager."""
-        self.platform = platform_utils.get_platform_name()
-        self.platform_name = self.SUPPORTED_PLATFORMS.get(self.platform, "unknown")
-        self.handlers = {}
-        self._load_platform_handlers()
-        self._config: Dict[str, Any] = {}
-        self._initialized = False
+    def __new__(cls) -> 'PlatformManager':
+        """Enforce singleton pattern.
         
-        # Initialize language and RTL support
-        self.current_language = get_current_language()
-        self.rtl_support = is_rtl(self.current_language)
-        setup_language(self.current_language)
-        
-        # Lazy load platform-specific modules
-        if self.platform == "darwin":
-            from .mac.system_info import MacSystemInfoGatherer
-            from .mac.shell_handler import MacShellHandler
-            from .mac.browser_handler import MacBrowserHandler
-
-            self._system_info_gatherers["Darwin"] = MacSystemInfoGatherer
-            self._shell_handlers["Darwin"] = MacShellHandler
-            self._browser_handlers["Darwin"] = MacBrowserHandler
-        elif self.platform == "win32":
-            from .windows.system_info import WindowsSystemInfoGatherer
-
-            self._system_info_gatherers["Windows"] = WindowsSystemInfoGatherer
-        elif self.platform.startswith("linux"):
-            from .ubuntu.system_info import UbuntuSystemInfoGatherer
-            from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
-
-            self._system_info_gatherers["Linux"] = UbuntuSystemInfoGatherer
-            self._shell_handlers["Linux"] = LinuxShellHandler
-        # Import ShellHandler only when needed
-        global ShellHandler
-        from labeeb.handlers.shell_handler import ShellHandler
+        Returns:
+            PlatformManager: The singleton instance.
+        """
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
     
-    def _load_platform_handlers(self) -> None:
-        """Load platform-specific handlers based on the current OS"""
+    def __init__(self):
+        """Initialize the platform manager if not already initialized."""
+        if not hasattr(self, '_initialized'):
+            try:
+                self.os_identifier = get_os_identifier()
+                self.platform_name = get_platform_name()
+                self.handlers: Dict[str, BaseHandler] = {}
+                self._config: Dict[str, Any] = {}
+                self._initialized = False
+                
+                # Initialize language and RTL support
+                self.current_language = get_current_language()
+                self.rtl_support = is_rtl(self.current_language)
+                setup_language(self.current_language)
+                
+                # Lazy load platform-specific modules
+                self._load_platform_modules()
+                
+                # Initialize the manager
+                self.initialize()
+                
+                logger.info(f"Platform manager initialized for platform: {self.platform_name}")
+            except Exception as e:
+                logger.error(f"Failed to initialize platform manager: {e}")
+                raise
+    
+    def _load_platform_modules(self) -> None:
+        """Load platform-specific modules based on the current platform."""
         try:
-            if self.platform == "darwin":
-                from .mac import calendar_controller
+            if self.platform_name == "macos":
+                from .mac.system_info import MacSystemInfoGatherer
+                from .handlers.mac.shell_handler import MacShellHandler
+                from .handlers.mac.browser_handler import MacBrowserHandler
 
-                self.handlers["calendar"] = calendar_controller.MacOSCalendarController()
-            elif self.platform == "win32":
-                # Windows handlers will be loaded here
-                pass
-            elif self.platform.startswith("linux"):
-                # LinuxClipboardHandler not implemented; skipping registration
-                pass
-        except Exception as e:
-            logger.error(f"Error loading platform handlers: {str(e)}")
+                self._system_info_gatherers["macos"] = MacSystemInfoGatherer
+                self._shell_handlers["macos"] = MacShellHandler
+                self._browser_handlers["macos"] = MacBrowserHandler
+            elif self.platform_name == "windows":
+                from .windows.system_info import WindowsSystemInfoGatherer
+                self._system_info_gatherers["windows"] = WindowsSystemInfoGatherer
+            elif self.platform_name == "linux":
+                from .ubuntu.system_info import UbuntuSystemInfoGatherer
+                from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
+                self._system_info_gatherers["linux"] = UbuntuSystemInfoGatherer
+                self._shell_handlers["linux"] = LinuxShellHandler
+            else:
+                logger.warning(f"Unsupported platform: {self.platform_name}")
+        except ImportError as e:
+            logger.error(f"Failed to load platform modules: {e}")
             raise
+    
+    def _load_config(self) -> None:
+        """Load platform-specific configuration."""
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), self.platform_name, "config.json")
+            
+            if os.path.exists(config_path):
+                import json
+                with open(config_path, "r", encoding="utf-8") as f:
+                    self._config = json.load(f)
+                logger.info(f"Loaded configuration from {config_path}")
+            else:
+                logger.warning(f"No configuration file found at {config_path}")
+                self._config = {}
+                
+        except Exception as e:
+            logger.error(f"Failed to load platform configuration: {e}")
+            self._config = {}
     
     def initialize(self) -> bool:
         """Initialize the platform manager.
@@ -141,86 +170,54 @@ class PlatformManager:
             self.current_language = get_current_language()
             self.rtl_support = is_rtl(self.current_language)
             
-            # Linux clipboard handler
-            if self.platform.startswith("linux") and "clipboard" in self.handlers:
-                handler = self.handlers["clipboard"]
-                if handler.initialize():
-                    self.handlers["clipboard"] = handler
-                else:
-                    print(f"Warning: Failed to initialize clipboard handler")
-            
             self._initialized = True
+            logger.info(f"Platform manager initialized with handlers: {list(self.handlers.keys())}")
             return True
             
         except Exception as e:
-            print(f"Failed to initialize PlatformManager: {e}")
+            logger.error(f"Failed to initialize PlatformManager: {e}")
             return False
-    
-    def cleanup(self) -> None:
-        """Clean up platform manager resources."""
-        if not self._initialized:
-            return
-        
-        # Clean up all handlers
-        for handler in self.handlers.values():
-            try:
-                handler.cleanup()
-            except Exception as e:
-                print(f"Error cleaning up handler: {e}")
-        
-        self.handlers.clear()
-        self._initialized = False
-    
-    def _load_config(self) -> None:
-        """Load platform-specific configuration."""
-        try:
-            config_path = os.path.join(os.path.dirname(__file__), self.platform_name, "config.json")
-            
-            if os.path.exists(config_path):
-                import json
-
-                with open(config_path, "r", encoding="utf-8") as f:
-                    self._config = json.load(f)
-            else:
-                print(f"Warning: No configuration file found at {config_path}")
-                self._config = {}
-                
-        except Exception as e:
-            print(f"Failed to load platform configuration: {e}")
-            self._config = {}
     
     def _initialize_handlers(self) -> None:
         """Initialize platform-specific handlers."""
-        if self.platform == "darwin":
-            from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
-            handler_map: Dict[str, Type[BaseHandler]] = {
-                "input": MacInputHandler,
-                "audio": MacAudioHandler,
-                "display": MacDisplayHandler,
-                "usb": MacUSBHandler,
-                "shell": self._shell_handlers.get(self.platform_name, None),
-                "browser": self._browser_handlers.get(self.platform_name, None),
-            }
-        elif self.platform.startswith("linux"):
-            from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
-            handler_map: Dict[str, Type[BaseHandler]] = {
-                "shell": LinuxShellHandler,
-            }
-        else:
-            handler_map: Dict[str, Type[BaseHandler]] = {}
+        try:
+            if self.platform_name == "macos":
+                from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
+                handler_map: Dict[str, Type[BaseHandler]] = {
+                    "input": MacInputHandler,
+                    "audio": MacAudioHandler,
+                    "display": MacDisplayHandler,
+                    "usb": MacUSBHandler,
+                    "shell": self._shell_handlers["macos"],
+                    "browser": self._browser_handlers["macos"],
+                }
+            elif self.platform_name == "linux":
+                from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
+                handler_map: Dict[str, Type[BaseHandler]] = {
+                    "shell": LinuxShellHandler,
+                }
+            else:
+                handler_map: Dict[str, Type[BaseHandler]] = {}
 
-        # Initialize each handler
-        for handler_type, handler_class in handler_map.items():
-            if handler_class is None:
-                continue
-            try:
-                handler = handler_class(self._config.get(handler_type, {}))
-                if handler.initialize():
-                    self.handlers[handler_type] = handler
-                else:
-                    print(f"Warning: Failed to initialize {handler_type} handler")
-            except Exception as e:
-                print(f"Error initializing {handler_type} handler: {e}")
+            # Initialize each handler
+            for handler_type, handler_class in handler_map.items():
+                if handler_class is None:
+                    logger.warning(f"{handler_type} handler class is None")
+                    continue
+                try:
+                    handler = handler_class(self._config.get(handler_type, {}))
+                    if handler.initialize():
+                        self.handlers[handler_type] = handler
+                        logger.info(f"Successfully initialized {handler_type} handler")
+                    else:
+                        logger.warning(f"{handler_type} handler initialization failed")
+                except Exception as e:
+                    logger.error(f"Error initializing {handler_type} handler: {e}")
+            
+            logger.info(f"Handlers after initialization: {list(self.handlers.keys())}")
+        except Exception as e:
+            logger.error(f"Failed to initialize handlers: {e}")
+            raise
     
     def get_handler(self, handler_type: str) -> Optional[BaseHandler]:
         """Get a platform-specific handler.
@@ -231,7 +228,19 @@ class PlatformManager:
         Returns:
             Optional[BaseHandler]: The requested handler or None if not available.
         """
+        logger.info(f"Getting handler '{handler_type}'. Available handlers: {list(self.handlers.keys())}")
         return self.handlers.get(handler_type)
+    
+    def is_handler_available(self, handler_type: str) -> bool:
+        """Check if a handler is available.
+        
+        Args:
+            handler_type: Type of handler to check.
+            
+        Returns:
+            bool: True if the handler is available, False otherwise.
+        """
+        return handler_type in self.handlers
     
     def get_platform(self) -> str:
         """Get the current platform identifier.
@@ -239,7 +248,7 @@ class PlatformManager:
         Returns:
             str: Platform identifier.
         """
-        return self.platform
+        return self.platform_name
     
     def is_platform_supported(self) -> bool:
         """Check if the current platform is supported.
@@ -247,7 +256,7 @@ class PlatformManager:
         Returns:
             bool: True if the platform is supported, False otherwise.
         """
-        return self.platform in self.SUPPORTED_PLATFORMS
+        return self.platform_name in self.SUPPORTED_PLATFORMS
     
     def get_config(self) -> Dict[str, Any]:
         """Get the platform configuration.
@@ -265,17 +274,6 @@ class PlatformManager:
         """
         return list(self.handlers.keys())
     
-    def is_handler_available(self, handler_type: str) -> bool:
-        """Check if a handler is available.
-        
-        Args:
-            handler_type: Type of handler to check.
-            
-        Returns:
-            bool: True if the handler is available, False otherwise.
-        """
-        return handler_type in self.handlers
-    
     def get_platform_info(self) -> Dict[str, Any]:
         """Get platform information.
         
@@ -283,7 +281,7 @@ class PlatformManager:
             Dict[str, Any]: Platform information including features and paths.
         """
         return {
-            "platform": self.platform,
+            "platform": self.platform_name,
             "platform_name": self.platform_name,
             "features": self._get_platform_features(),
             "paths": self._get_platform_paths(),
@@ -309,11 +307,11 @@ class PlatformManager:
         }
         
         # Platform-specific feature adjustments
-        if self.platform == "darwin":
+        if self.platform_name == "macos":
             features.update({"calendar": True, "notifications": True, "accessibility": True})
-        elif self.platform == "win32":
+        elif self.platform_name == "win32":
             features.update({"calendar": False, "notifications": True, "accessibility": True})
-        elif self.platform.startswith("linux"):
+        elif self.platform_name.startswith("linux"):
             features.update({"calendar": False, "notifications": True, "accessibility": True})
             
         return features
@@ -326,7 +324,7 @@ class PlatformManager:
         """
         paths = {}
         
-        if self.platform == "darwin":
+        if self.platform_name == "macos":
             paths.update(
                 {
                     "home": os.path.expanduser("~"),
@@ -337,7 +335,7 @@ class PlatformManager:
                     "logs": os.path.join(os.path.expanduser("~"), "Library", "Logs", "Labeeb"),
                 }
             )
-        elif self.platform == "win32":
+        elif self.platform_name == "win32":
             paths.update(
                 {
                     "home": os.path.expanduser("~"),
@@ -348,7 +346,7 @@ class PlatformManager:
                     ),
                 }
             )
-        elif self.platform.startswith("linux"):
+        elif self.platform_name.startswith("linux"):
             paths.update(
                 {
                     "home": os.path.expanduser("~"),
@@ -370,43 +368,55 @@ class PlatformManager:
         """
         return self.handlers.copy()
     
-    @classmethod
-    def get_system_info_gatherer(cls) -> BaseSystemInfoGatherer:
-        """Get the appropriate system info gatherer for the current platform.
+    def cleanup(self) -> None:
+        """Clean up platform manager resources."""
+        if not self._initialized:
+            return
         
-        Returns:
-            BaseSystemInfoGatherer: System info gatherer instance.
-        """
-        platform_name = platform_utils.get_platform_name()
-        gatherer_class = cls._system_info_gatherers.get(platform_name)
-        
-        if gatherer_class is None:
-            raise NotImplementedError(f"No system info gatherer for {platform_name}")
+        try:
+            # Clean up all handlers
+            for handler in self.handlers.values():
+                try:
+                    handler.cleanup()
+                except Exception as e:
+                    logger.error(f"Error cleaning up handler: {e}")
             
-        return gatherer_class()
+            self.handlers.clear()
+            self._initialized = False
+            PlatformManager._instance = None  # Reset singleton instance
+            logger.info("Platform manager cleaned up successfully")
+        except Exception as e:
+            logger.error(f"Error during platform manager cleanup: {e}")
+            raise
     
     @classmethod
-    def get_system_info(cls, language: Optional[str] = None) -> Dict[str, Any]:
-        """Get system information.
+    def get_instance(cls) -> 'PlatformManager':
+        """Get the singleton instance of PlatformManager.
         
-        Args:
-            language: Optional language code for localized information.
-            
         Returns:
-            Dict[str, Any]: System information.
+            PlatformManager: The singleton instance.
         """
-        gatherer = cls.get_system_info_gatherer()
-        return gatherer.get_system_info(language)
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
 
 
-def get_platform_system_info_gatherer() -> BaseSystemInfoGatherer:
+# Create the singleton instance
+platform_manager = PlatformManager.get_instance()
+
+
+def get_platform_system_info_gatherer() -> Optional[BaseSystemInfoGatherer]:
     """Get the appropriate system info gatherer for the current platform.
     
+    This function provides a module-level interface to access the system info gatherer
+    while maintaining proper encapsulation and avoiding circular dependencies.
+    
     Returns:
-        BaseSystemInfoGatherer: System info gatherer instance.
+        Optional[BaseSystemInfoGatherer]: The system info gatherer instance for the current platform,
+        or None if not available.
     """
-    return PlatformManager.get_system_info_gatherer()
-
-
-# Create a singleton instance
-platform_manager = PlatformManager()
+    try:
+        return platform_manager.get_handler("system_info")
+    except Exception as e:
+        logger.error(f"Failed to get system info gatherer: {e}")
+        return None

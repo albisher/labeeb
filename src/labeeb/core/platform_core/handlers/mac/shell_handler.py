@@ -12,12 +12,19 @@ compatibility with the core Labeeb shell system.
 """
 
 from typing import List, Tuple, Optional
-from ..shell_handler import BaseShellHandler
+from ...shell_handler import BaseShellHandler
 import subprocess
 
 
 class MacShellHandler(BaseShellHandler):
     """macOS-specific shell handler implementation."""
+
+    def __init__(self, config=None):
+        super().__init__()
+
+    def initialize(self) -> bool:
+        """Initialize the handler. Returns True if successful."""
+        return True
 
     def get_safe_commands(self) -> List[str]:
         """Get the list of safe commands for macOS.

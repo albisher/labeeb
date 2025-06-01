@@ -13,7 +13,8 @@ import json
 import shutil
 from pathlib import Path
 import logging
-from labeeb.core.platform_core import get_platform_name, get_system_info, get_file_path
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
+from labeeb.core.platform_core import get_system_info, get_file_path
 
 CONFIG_PATH = Path(__file__).parent.parent / "config" / "settings.json"
 REQUIRED_MODEL = "gemma3:4b"

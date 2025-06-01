@@ -40,6 +40,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
 sys.path.append(project_root)
 
 from labeeb.core.platform_core.platform_manager import PlatformManager
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 # Set up logging
 logger = logging.getLogger(__name__)

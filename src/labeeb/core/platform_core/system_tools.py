@@ -4,7 +4,7 @@ DEPRECATED: SystemTools logic is now handled by PlatformManager (see platform_co
 
 # Deprecated stub for backward compatibility
 from platform_core.platform_manager import PlatformManager
-from labeeb.core.platform_core.platform_utils import get_platform_name, is_mac
+from labeeb.services.platform_services.common.platform_utils import get_platform_name, is_mac
 
 import os
 import platform

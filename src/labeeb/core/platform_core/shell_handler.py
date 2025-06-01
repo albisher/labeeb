@@ -5,7 +5,7 @@ import json
 import enum
 import re
 from typing import Dict, Any, List, Tuple, Optional
-from labeeb.services.platform_services.common import platform_utils
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 """
 This module provides a platform-agnostic shell command execution framework with safety features.
@@ -69,7 +69,7 @@ class BaseShellHandler:
         self.suppress_prompt = suppress_prompt
         self.quiet_mode = quiet_mode
         self.fast_mode = fast_mode
-        self.system_platform = platform_utils.get_platform_name().lower()
+        self.system_platform = get_platform_name().lower()
 
         # Will be assigned externally
         self.screen_manager = None

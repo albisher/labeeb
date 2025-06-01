@@ -34,6 +34,13 @@
 - [x] Update documentation to clarify minimal vs. dev dependencies and installation instructions.
 - [ ] Periodically review dependencies for minimalism and compliance with architecture rules.
 
+### [ ] Critical Import Path Fixes
+- [ ] Fix all incorrect imports from `labeeb.platform_services` to `labeeb.services.platform_services` throughout the codebase. This is required for platform-specific features (e.g., screenshot, audio, system info) to work and is currently blocking command testing.
+
+### [ ] Platform/Core Handlers (Implementation)
+- [ ] Implement `src/labeeb/core/platform_core/mac/shell_handler.py` (MacShellHandler) - Required for basic command execution.
+- [ ] Review and implement other missing platform-specific handlers in `src/labeeb/core/platform_core/mac/`.
+
 ---
 
 All TODOs are now tracked in this unified checklist. Remove all inline TODOs from code and documentation after adding them here. Mark each as complete with [x] when done.

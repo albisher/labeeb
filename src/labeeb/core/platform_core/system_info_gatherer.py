@@ -15,6 +15,7 @@ import psutil
 from typing import Dict, Any
 from labeeb.models.system_types import SystemInfo
 from labeeb.services.platform_services.common import platform_utils
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 
 class SystemInfoGatherer:

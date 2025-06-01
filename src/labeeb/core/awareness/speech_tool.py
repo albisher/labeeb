@@ -12,7 +12,7 @@ import logging
 import platform
 import subprocess
 from typing import Optional
-from labeeb.core.platform_core.platform_utils import get_platform_name, is_mac, is_windows, is_linux
+from labeeb.services.platform_services.common.platform_utils import get_platform_name, is_mac, is_windows, is_linux
 
 try:
     import pyttsx3

@@ -30,6 +30,9 @@ from labeeb.core.platform_core.handlers.mac.input_handler import MacInputHandler
 # from labeeb.core.platform_core.linux.input_handler import LinuxInputHandler
 # from labeeb.core.platform_core.windows.input_handler import WindowsInputHandler
 
+# Canonical platform utilities import
+from labeeb.services.platform_services.common.platform_utils import get_platform_name, is_windows, is_mac, is_linux
+
 logger = logging.getLogger(__name__)
 
 
@@ -160,23 +163,6 @@ def get_input_handler() -> Optional[Any]:
     except ImportError as e:
         logger.warning(f"Failed to import input handler for {system}: {e}")
     return None
-
-
-def get_platform_name():
-    """Get the name of the current platform."""
-    return platform.system().lower()
-
-
-def is_windows():
-    return get_platform_name() == "windows"
-
-
-def is_mac():
-    return get_platform_name() == "darwin"
-
-
-def is_linux():
-    return get_platform_name() == "linux"
 
 
 def is_posix():

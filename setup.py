@@ -1,7 +1,7 @@
 import os
 import sys
 from setuptools import setup, find_packages
-from labeeb.platform_services.common.platform_manager import PlatformManager
+from labeeb.services.platform_services.common.platform_manager import PlatformManager
 
 # Initialize platform manager
 platform_manager = PlatformManager()

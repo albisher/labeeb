@@ -8,6 +8,7 @@ from pathlib import Path
 from labeeb.platform_core.platform_manager import PlatformManager
 from typing import List, Dict, Any
 from ..core.platform_core import get_platform_name, get_file_path
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 logger = logging.getLogger(__name__)
 

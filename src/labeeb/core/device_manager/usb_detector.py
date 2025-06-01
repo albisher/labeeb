@@ -7,7 +7,7 @@ import platform
 import subprocess
 import re
 import os
-from labeeb.core.platform_core.platform_utils import get_platform_name
+from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 
 class USBDetector:
