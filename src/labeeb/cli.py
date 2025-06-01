@@ -72,9 +72,10 @@ def run_calculator(expression: str, show_gui: bool = True) -> None:
         
         # Show GUI if requested
         if show_gui:
-            tool.show_calculator()
-            tool.type_expression(expression)
-            tool.press_equals()
+            auto = AutomationTool()
+            auto.show_calculator()
+            auto.type_expression(expression)
+            auto.press_equals()
         
         # Speak the result
         tts = TTSTool()

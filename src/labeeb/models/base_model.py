@@ -1,9 +1,9 @@
 """
-Base tool class for all tools.
+Base model class for all models.
 
 ---
-description: Base class for all tools in the system
-endpoints: [base_tool]
+description: Base class for all models in the system
+endpoints: [base_model]
 inputs: []
 outputs: []
 dependencies: []
@@ -21,13 +21,13 @@ from labeeb.utils.platform_utils import ensure_labeeb_directories
 # Configure logging
 logger = logging.getLogger(__name__)
 
-class BaseTool(ABC):
-    """Base class for all tools in the system."""
-
+class BaseModel(ABC):
+    """Base class for all models in the system."""
+    
     def __init__(self):
-        """Initialize the base tool."""
-        self.name = "base_tool"
-        self.description = "Base class for all tools"
+        """Initialize the base model."""
+        self.name = "base_model"
+        self.description = "Base class for all models"
         self.version = "1.0.0"
         
         # Ensure required directories exist
@@ -36,41 +36,41 @@ class BaseTool(ABC):
         # Initialize configuration
         self.config = {}
         
-        # Initialize tool state
+        # Initialize model state
         self.state = {
             "status": "initialized",
             "last_used": None,
             "usage_count": 0,
             "error": None
         }
-
+    
     @abstractmethod
     def validate_config(self) -> bool:
-        """Validate the tool configuration."""
+        """Validate the model configuration."""
         pass
     
     def get_name(self) -> str:
-        """Get the tool name."""
+        """Get the model name."""
         return self.name
     
     def get_description(self) -> str:
-        """Get the tool description."""
+        """Get the model description."""
         return self.description
     
     def get_version(self) -> str:
-        """Get the tool version."""
+        """Get the model version."""
         return self.version
     
     def get_config(self) -> Dict[str, Any]:
-        """Get the tool configuration."""
+        """Get the model configuration."""
         return self.config
     
     def set_config(self, config: Dict[str, Any]) -> None:
-        """Set the tool configuration."""
+        """Set the model configuration."""
         self.config = config
     
     def update_config(self, config: Dict[str, Any]) -> None:
-        """Update the tool configuration."""
+        """Update the model configuration."""
         self.config.update(config)
     
     def get_config_value(self, key: str, default: Any = None) -> Any:
@@ -90,11 +90,11 @@ class BaseTool(ABC):
         return key in self.config
     
     def clear_config(self) -> None:
-        """Clear the tool configuration."""
+        """Clear the model configuration."""
         self.config.clear()
     
     def get_status(self) -> Dict[str, Any]:
-        """Get the tool status."""
+        """Get the model status."""
         return {
             "name": self.name,
             "description": self.description,
@@ -120,74 +120,74 @@ class BaseTool(ABC):
         logger.debug(f"[{self.name}] {message}")
     
     def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute the tool.
-
+        """Execute the model.
+        
         Args:
-            input_data: Input data for the tool
-
+            input_data: Input data for the model
+            
         Returns:
-            Dict containing the result of executing the tool
+            Dict containing the result of executing the model
         """
         try:
             if not self.validate_config():
                 return {
                     "status": "error",
-                    "message": "Tool configuration is invalid"
+                    "message": "Model configuration is invalid"
                 }
             
-            # Update tool state
+            # Update model state
             self.state["status"] = "running"
             self.state["last_used"] = datetime.now().isoformat()
             self.state["usage_count"] += 1
             
-            # Execute tool
-            result = self._execute_tool(input_data)
+            # Execute model
+            result = self._execute_model(input_data)
             
-            # Update tool state
+            # Update model state
             self.state["status"] = "completed" if result["status"] == "success" else "failed"
             self.state["error"] = result.get("message")
             
             return result
             
         except Exception as e:
-            logger.error(f"Error executing tool: {str(e)}")
+            logger.error(f"Error executing model: {str(e)}")
             self.state["status"] = "failed"
             self.state["error"] = str(e)
             return {
                 "status": "error",
-                "message": f"Failed to execute tool: {str(e)}"
+                "message": f"Failed to execute model: {str(e)}"
             }
-
+    
     @abstractmethod
-    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute the tool.
-
+    def _execute_model(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute the model.
+        
         Args:
-            input_data: Input data for the tool
-
+            input_data: Input data for the model
+            
         Returns:
-            Dict containing the result of executing the tool
+            Dict containing the result of executing the model
         """
         pass
-
+    
     def _validate_input_data(self, input_data: Dict[str, Any]) -> bool:
         """Validate the input data.
-
+        
         Args:
             input_data: Input data to validate
-
+            
         Returns:
             True if input data is valid, False otherwise
         """
         required_fields = self.get_config_value("required_input_fields", [])
         return all(field in input_data for field in required_fields)
-
+    
     def _validate_output_data(self, output_data: Dict[str, Any]) -> bool:
         """Validate the output data.
         
         Args:
             output_data: Output data to validate
-
+            
         Returns:
             True if output data is valid, False otherwise
         """
@@ -199,7 +199,7 @@ class BaseTool(ABC):
         
         Args:
             error: Exception to format
-
+            
         Returns:
             Dict containing the formatted error
         """
@@ -208,17 +208,17 @@ class BaseTool(ABC):
             "message": str(error),
             "type": error.__class__.__name__
         }
-
+    
     def _format_success(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format success data for the output.
-
+        
         Args:
             data: Data to format
-
+            
         Returns:
             Dict containing the formatted success data
         """
         return {
             "status": "success",
             "data": data
-        }
+        } 

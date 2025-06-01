@@ -41,6 +41,64 @@
 - [ ] Implement `src/labeeb/core/platform_core/mac/shell_handler.py` (MacShellHandler) - Required for basic command execution.
 - [ ] Review and implement other missing platform-specific handlers in `src/labeeb/core/platform_core/mac/`.
 
+## Weather Agent Implementation
+- [ ] Fix BaseAgentTool Import Issue
+  - [ ] Check `src/labeeb/tools/base_tool.py` and implement `BaseAgentTool` class
+  - [ ] Or update `src/labeeb/agents/labeeb_agent.py` to use correct import
+
+- [ ] Environment Setup
+  - [ ] Create `.env` file in project root
+  - [ ] Add `WEATHER_API_KEY=your_api_key_here` to `.env`
+
+- [ ] Weather Agent Enhancements
+  - [ ] Add Arabic language support in `WeatherAgent`
+  - [ ] Improve city extraction for better natural language understanding
+  - [ ] Add error handling for API rate limits
+  - [ ] Add caching for API responses
+
+- [ ] Testing
+  - [ ] Test English weather queries
+  - [ ] Test Arabic weather queries
+  - [ ] Test weather forecasts
+  - [ ] Test error handling
+  - [ ] Test caching mechanism
+
+- [ ] Documentation
+  - [ ] Add docstrings for all methods
+  - [ ] Add usage examples
+  - [ ] Document configuration options
+  - [ ] Add API documentation
+
+- [ ] Integration
+  - [ ] Integrate with main command processing system
+  - [ ] Add support for weather alerts
+  - [ ] Add support for weather history
+  - [ ] Add support for multiple weather units (metric/imperial)
+
+- [ ] Error Handling
+  - [ ] Add proper error messages for API failures
+  - [ ] Add retry mechanism for failed API calls
+  - [ ] Add validation for city names
+  - [ ] Add proper logging
+
+- [ ] Performance
+  - [ ] Optimize caching strategy
+  - [ ] Add request rate limiting
+  - [ ] Add response compression
+  - [ ] Add connection pooling
+
+- [ ] Security
+  - [ ] Secure API key storage
+  - [ ] Add request validation
+  - [ ] Add response sanitization
+  - [ ] Add proper error handling for security issues
+
+- [ ] Monitoring
+  - [ ] Add usage metrics
+  - [ ] Add performance monitoring
+  - [ ] Add error tracking
+  - [ ] Add API usage tracking
+
 ---
 
 All TODOs are now tracked in this unified checklist. Remove all inline TODOs from code and documentation after adding them here. Mark each as complete with [x] when done.

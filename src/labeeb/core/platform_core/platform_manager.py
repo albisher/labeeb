@@ -88,15 +88,15 @@ class PlatformManager:
                 self.os_identifier = get_os_identifier()
                 self.platform_name = get_platform_name()
                 self.handlers: Dict[str, BaseHandler] = {}
-                self._config: Dict[str, Any] = {}
-                self._initialized = False
-                
-                # Initialize language and RTL support
-                self.current_language = get_current_language()
-                self.rtl_support = is_rtl(self.current_language)
-                setup_language(self.current_language)
-                
-                # Lazy load platform-specific modules
+        self._config: Dict[str, Any] = {}
+        self._initialized = False
+        
+        # Initialize language and RTL support
+        self.current_language = get_current_language()
+        self.rtl_support = is_rtl(self.current_language)
+        setup_language(self.current_language)
+        
+        # Lazy load platform-specific modules
                 self._load_platform_modules()
                 
                 # Initialize the manager
@@ -111,7 +111,7 @@ class PlatformManager:
         """Load platform-specific modules based on the current platform."""
         try:
             if self.platform_name == "macos":
-                from .mac.system_info import MacSystemInfoGatherer
+            from .mac.system_info import MacSystemInfoGatherer
                 from .handlers.mac.shell_handler import MacShellHandler
                 from .handlers.mac.browser_handler import MacBrowserHandler
 
@@ -119,11 +119,11 @@ class PlatformManager:
                 self._shell_handlers["macos"] = MacShellHandler
                 self._browser_handlers["macos"] = MacBrowserHandler
             elif self.platform_name == "windows":
-                from .windows.system_info import WindowsSystemInfoGatherer
+            from .windows.system_info import WindowsSystemInfoGatherer
                 self._system_info_gatherers["windows"] = WindowsSystemInfoGatherer
             elif self.platform_name == "linux":
-                from .ubuntu.system_info import UbuntuSystemInfoGatherer
-                from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
+            from .ubuntu.system_info import UbuntuSystemInfoGatherer
+            from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
                 self._system_info_gatherers["linux"] = UbuntuSystemInfoGatherer
                 self._shell_handlers["linux"] = LinuxShellHandler
             else:
@@ -182,40 +182,40 @@ class PlatformManager:
         """Initialize platform-specific handlers."""
         try:
             if self.platform_name == "macos":
-                from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
-                handler_map: Dict[str, Type[BaseHandler]] = {
-                    "input": MacInputHandler,
-                    "audio": MacAudioHandler,
-                    "display": MacDisplayHandler,
-                    "usb": MacUSBHandler,
+            from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
+            handler_map: Dict[str, Type[BaseHandler]] = {
+                "input": MacInputHandler,
+                "audio": MacAudioHandler,
+                "display": MacDisplayHandler,
+                "usb": MacUSBHandler,
                     "shell": self._shell_handlers["macos"],
                     "browser": self._browser_handlers["macos"],
-                }
+            }
             elif self.platform_name == "linux":
-                from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
-                handler_map: Dict[str, Type[BaseHandler]] = {
-                    "shell": LinuxShellHandler,
-                }
-            else:
-                handler_map: Dict[str, Type[BaseHandler]] = {}
+            from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
+            handler_map: Dict[str, Type[BaseHandler]] = {
+                "shell": LinuxShellHandler,
+            }
+        else:
+            handler_map: Dict[str, Type[BaseHandler]] = {}
 
-            # Initialize each handler
-            for handler_type, handler_class in handler_map.items():
-                if handler_class is None:
+        # Initialize each handler
+        for handler_type, handler_class in handler_map.items():
+            if handler_class is None:
                     logger.warning(f"{handler_type} handler class is None")
-                    continue
-                try:
-                    handler = handler_class(self._config.get(handler_type, {}))
-                    if handler.initialize():
-                        self.handlers[handler_type] = handler
+                continue
+            try:
+                handler = handler_class(self._config.get(handler_type, {}))
+                if handler.initialize():
+                    self.handlers[handler_type] = handler
                         logger.info(f"Successfully initialized {handler_type} handler")
-                    else:
+                else:
                         logger.warning(f"{handler_type} handler initialization failed")
                 except Exception as e:
                     logger.error(f"Error initializing {handler_type} handler: {e}")
             
             logger.info(f"Handlers after initialization: {list(self.handlers.keys())}")
-        except Exception as e:
+            except Exception as e:
             logger.error(f"Failed to initialize handlers: {e}")
             raise
     
@@ -392,7 +392,7 @@ class PlatformManager:
     @classmethod
     def get_instance(cls) -> 'PlatformManager':
         """Get the singleton instance of PlatformManager.
-        
+            
         Returns:
             PlatformManager: The singleton instance.
         """

@@ -1,9 +1,9 @@
 """
-Base agent class for all agents.
+Base handler class for all handlers.
 
 ---
-description: Base class for all agents in the system
-endpoints: [base_agent]
+description: Base class for all handlers in the system
+endpoints: [base_handler]
 inputs: []
 outputs: []
 dependencies: []
@@ -21,13 +21,13 @@ from labeeb.utils.platform_utils import ensure_labeeb_directories
 # Configure logging
 logger = logging.getLogger(__name__)
 
-class BaseAgent(ABC):
-    """Base class for all agents in the system."""
-
+class BaseHandler(ABC):
+    """Base class for all handlers in the system."""
+    
     def __init__(self):
-        """Initialize the base agent."""
-        self.name = "base_agent"
-        self.description = "Base class for all agents"
+        """Initialize the base handler."""
+        self.name = "base_handler"
+        self.description = "Base class for all handlers"
         self.version = "1.0.0"
         
         # Ensure required directories exist
@@ -38,31 +38,31 @@ class BaseAgent(ABC):
     
     @abstractmethod
     def validate_config(self) -> bool:
-        """Validate the agent configuration."""
+        """Validate the handler configuration."""
         pass
     
     def get_name(self) -> str:
-        """Get the agent name."""
+        """Get the handler name."""
         return self.name
     
     def get_description(self) -> str:
-        """Get the agent description."""
+        """Get the handler description."""
         return self.description
-
+    
     def get_version(self) -> str:
-        """Get the agent version."""
+        """Get the handler version."""
         return self.version
-
+    
     def get_config(self) -> Dict[str, Any]:
-        """Get the agent configuration."""
+        """Get the handler configuration."""
         return self.config
     
     def set_config(self, config: Dict[str, Any]) -> None:
-        """Set the agent configuration."""
+        """Set the handler configuration."""
         self.config = config
     
     def update_config(self, config: Dict[str, Any]) -> None:
-        """Update the agent configuration."""
+        """Update the handler configuration."""
         self.config.update(config)
     
     def get_config_value(self, key: str, default: Any = None) -> Any:
@@ -82,11 +82,11 @@ class BaseAgent(ABC):
         return key in self.config
     
     def clear_config(self) -> None:
-        """Clear the agent configuration."""
+        """Clear the handler configuration."""
         self.config.clear()
     
     def get_status(self) -> Dict[str, Any]:
-        """Get the agent status."""
+        """Get the handler status."""
         return {
             "name": self.name,
             "description": self.description,
@@ -109,3 +109,40 @@ class BaseAgent(ABC):
     def log_debug(self, message: str) -> None:
         """Log a debug message."""
         logger.debug(f"[{self.name}] {message}")
+    
+    def handle_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle an event.
+        
+        Args:
+            event: Event to handle
+            
+        Returns:
+            Dict containing the result of handling the event
+        """
+        try:
+            if not self.validate_config():
+                return {
+                    "status": "error",
+                    "message": "Handler configuration is invalid"
+                }
+            
+            return self._process_event(event)
+            
+        except Exception as e:
+            logger.error(f"Error handling event: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Failed to handle event: {str(e)}"
+            }
+    
+    @abstractmethod
+    def _process_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """Process an event.
+        
+        Args:
+            event: Event to process
+            
+        Returns:
+            Dict containing the result of processing the event
+        """
+        pass 
