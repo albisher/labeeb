@@ -3,7 +3,7 @@ Audio tool with A2A, MCP, and SmolAgents compliance.
 
 This tool provides audio processing capabilities while following:
 - A2A (Agent-to-Agent) protocol for agent collaboration
-- MCP (Multi-Channel Protocol) for unified channel support
+- MCP (Model Context Protocol) for unified channel support
 - SmolAgents pattern for minimal, efficient implementation
 """
 

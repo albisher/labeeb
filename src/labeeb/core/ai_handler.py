@@ -27,7 +27,7 @@ from labeeb.core.exceptions import AIError, ConfigurationError
 from labeeb.core.ai_performance_tracker import AIPerformanceTracker
 from labeeb.core.model_config_manager import ModelConfigManager
 from labeeb.core.key_manager import KeyManager
-from labeeb.system_types import SystemInfo
+from labeeb.models.system_types import SystemInfo
 from labeeb.core.command_processor.ai_command_extractor import AICommandExtractor
 from labeeb.core.platform_core.platform_manager import get_platform_system_info_gatherer
 

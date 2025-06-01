@@ -18,10 +18,10 @@ An agent is a software entity that can perceive, reason, and act to achieve goal
 - Agents can call, communicate, and coordinate with each other
 - Supports scalable, modular, and robust systems
 
-## MCP (Multi-Channel Protocol)
-- Unified support for CLI, GUI, web, and other channels
-- Maintains context/state across channels
-- Enables seamless user experience and extensibility
+## MCP (Model Context Protocol)
+- Unified protocol for model context management and agent/model interaction
+- Enables agents to interact with models in a standardized, context-aware way
+- Supports context/state management for agent/model workflows
 
 ## Plan/Execute Loop
 - Agents receive commands/goals
@@ -41,7 +41,7 @@ An agent is a software entity that can perceive, reason, and act to achieve goal
 - Refactor command handlers as tools (see `src/labeeb/tools/`)
 - Implement Agent classes with state, memory, and plan/execute methods (see `src/labeeb/ai/`)
 - Use A2A for agent collaboration and delegation
-- Use MCP for multi-channel support
+- Use MCP for model context protocol support
 - Optimize for local-first, minimal resource usage
 - Document and test all agent, tool, and workflow patterns
 

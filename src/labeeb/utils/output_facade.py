@@ -17,7 +17,7 @@ Output Philosophy & Flow:
 import sys
 import os
 from typing import Optional, Any, Dict, Union, List
-from labeeb.logging_config import get_logger
+from labeeb.core.logging_config import get_logger
 from pathlib import Path
 import arabic_reshaper
 from bidi.algorithm import get_display

@@ -3,7 +3,7 @@ WebSearchingTool: Enables the Labeeb agent to perform web searches and retrieve 
 
 This tool provides web searching capabilities while following:
 - A2A (Agent-to-Agent) protocol for agent collaboration
-- MCP (Multi-Channel Protocol) for unified channel support
+- MCP (Model Context Protocol) for unified channel support
 - SmolAgents pattern for minimal, efficient implementation
 """
 

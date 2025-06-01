@@ -15,17 +15,17 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
 sys.path.append(project_root)
 
-from labeeb.core.platform_core.mac.audio_handler import MacAudioHandler
+from labeeb.core.platform_core.handlers.mac.audio_handler import MacAudioHandler
 
 # from labeeb.core.platform_core.linux.audio_handler import LinuxAudioHandler
 # from labeeb.core.platform_core.windows.audio_handler import WindowsAudioHandler
 
-from labeeb.core.platform_core.mac.usb_handler import MacUSBHandler
+from labeeb.core.platform_core.handlers.mac.usb_handler import MacUSBHandler
 
 # from labeeb.core.platform_core.linux.usb_handler import LinuxUSBHandler
 # from labeeb.core.platform_core.windows.usb_handler import WindowsUSBHandler
 
-from labeeb.core.platform_core.mac.input_handler import MacInputHandler
+from labeeb.core.platform_core.handlers.mac.input_handler import MacInputHandler
 
 # from labeeb.core.platform_core.linux.input_handler import LinuxInputHandler
 # from labeeb.core.platform_core.windows.input_handler import WindowsInputHandler

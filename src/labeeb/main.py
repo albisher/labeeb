@@ -28,7 +28,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 sys.path.insert(0, project_root)
 
-from labeeb.logging_config import setup_logging, get_logger
+from labeeb.core.logging_config import setup_logging, get_logger
 from labeeb.core.exceptions import LabeebError, AIError, ConfigurationError, CommandError
 from labeeb.core.cache_manager import CacheManager
 from labeeb.core.platform_core.platform_manager import PlatformManager
@@ -37,13 +37,12 @@ from labeeb.core.shell_handler import ShellHandler
 from labeeb.core.ai_handler import AIHandler
 from labeeb.utils.output_facade import output
 from labeeb.core.file_operations import process_file_flag_request
-from labeeb.health_check.ollama_health_check import check_ollama_server, check_model_available
+from labeeb.services.health_check.ollama_health_check import check_ollama_server, check_model_available
 from labeeb.core.model_manager import ModelManager
 from labeeb.core.config_manager import ConfigManager
 from labeeb.core.ai.agent import LabeebAgent
 from labeeb.core.ai.workflows.base_workflow import LabeebWorkflow
 from labeeb.tools.base_tool import BaseAgentTool
-from labeeb.services.ollama_health_check import check_ollama_server, check_model_available
 
 # Set up logging
 logger = get_logger(__name__)
@@ -493,7 +492,7 @@ Type 'help' for available commands or ask me anything!
         """Interactively switch the AI model at runtime."""
         # Get available models for the selected provider
         if self.config["default_ai_provider"] == "ollama":
-            from labeeb.health_check.ollama_health_check import check_ollama_server
+            from labeeb.services.health_check.ollama_health_check import check_ollama_server
 
             ok, tags_json = check_ollama_server()
             if not ok:

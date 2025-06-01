@@ -22,11 +22,11 @@ base_requires = [
     'screen-brightness-control>=0.16.0',
     'pygetwindow>=0.0.9',
     'pyperclip>=1.8.2',
-    'pillow>=10.0.0',
+    'pillow>=11.2.1',
     'numpy>=1.24.0',
     'pandas>=2.0.0',
     'scikit-learn>=1.3.0',
-    'matplotlib>=3.7.0',
+    'matplotlib>=3.8.0',
     'seaborn>=0.12.0',
     'plotly>=5.18.0',
     'pyqt5>=5.15.0',
@@ -56,9 +56,6 @@ base_requires = [
     'beautifulsoup4>=4.12.2',
     'python-dateutil>=2.8.2',
     'smolagents>=0.1.0',
-    'langchain>=0.1.0',
-    'langchain-core>=0.1.0',
-    'langchain-community>=0.1.0',
     'sentence-transformers>=2.2.2',
     'torch>=2.2.0',
     'chromadb>=0.4.22',
@@ -87,7 +84,10 @@ base_requires = [
     'aiomysql>=0.2.0',
     'aioimaplib>=2.0.0',
     'aiosmtplib>=3.0.0',
-    'dnspython>=2.6.0'
+    'dnspython>=2.6.0',
+    'urllib3>=2.0.0',
+    'mkdocs>=1.5.0',
+    'usb>=1.2.1'
 ]
 
 # Platform-specific dependencies

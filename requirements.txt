@@ -35,31 +35,9 @@ matplotlib>=3.8.0
 arabic-reshaper>=3.0.0
 python-bidi>=0.4.2
 
-# Development dependencies
-pytest>=7.4.0
-pytest-cov>=4.1.0
-black>=23.7.0
-isort>=5.12.0
-flake8>=6.1.0
-mypy>=1.5.1
-pytest-asyncio>=0.18.0
-python-json-logger>=2.0.7
-colorlog>=6.7.0
-
-# GUI dependencies
-PyQt5>=5.15.11
-PyQt5-sip>=12.17.0
-PyQt5-Qt5>=5.15.17
-pyaudio>=0.2.13
-
-# Audio and Speech
-pyttsx3>=2.90
-whisper>=1.1.10
-openai-whisper @ git+https://github.com/openai/whisper.git
-
 # Platform specific dependencies
 # macOS
-pyobjc>=9.2; sys_platform == 'darwin'  # This will install all required pyobjc packages
+pyobjc>=9.2; sys_platform == 'darwin'
 pyobjc-framework-AVFoundation>=9.2; sys_platform == 'darwin'
 pyobjc-framework-AppKit>=9.2; sys_platform == 'darwin'
 pyobjc-framework-CoreAudio>=9.2; sys_platform == 'darwin'
@@ -74,35 +52,18 @@ pygetwindow>=0.0.9; sys_platform == 'darwin'
 pywin32>=306; sys_platform == 'win32'
 wmi>=1.5.1; sys_platform == 'win32'
 comtypes>=1.2.0; sys_platform == 'win32'
-win32api; sys_platform == 'win32'
-win32clipboard; sys_platform == 'win32'
-win32com; sys_platform == 'win32'
-win32con; sys_platform == 'win32'
-win32file; sys_platform == 'win32'
-win32gui; sys_platform == 'win32'
-win32process; sys_platform == 'win32'
-win32security; sys_platform == 'win32'
 
 # Linux
 python-xlib>=0.33; sys_platform == 'linux'
 pyalsaaudio>=0.10.0; sys_platform == 'linux'
-alsaaudio>=0.10.0; sys_platform == 'linux'
 pyudev>=0.24.0; sys_platform == 'linux'
 distro>=1.9.0; sys_platform == 'linux'
 sounddevice>=0.4.6; sys_platform == 'linux'
 
 # Core AI and agent framework
 smolagents>=0.1.0
-langchain>=0.1.0
-langchain-core>=0.1.0
-langchain-community>=0.1.0
-
-# LLM and embedding
-transformers>=4.40.0
 sentence-transformers>=2.2.2
 torch>=2.2.0
-
-# Vector DB for memory
 chromadb>=0.4.22
 
 # Browser automation
@@ -110,99 +71,40 @@ playwright>=1.42.0
 selenium>=4.18.1
 
 # System and device awareness
-psutil>=7.0.0
-pyautogui>=0.9.54
 pynput>=1.7.6
-
-# File, network, and OS tools
-requests>=2.31.0
-beautifulsoup4>=4.12.0
 
 # i18n and translation
 gettext>=0.21.0
 
 # Audio and vision
 pyaudio>=0.2.13
-pillow>=11.2.1
-opencv-python>=4.8.0
 
 # For TTS/STT
 pyttsx3>=2.90
 openai-whisper @ git+https://github.com/openai/whisper.git
 
-# For testing and linting
-pytest>=7.4.0
-pytest-asyncio>=0.18.0
-
 # For parsing and config
 python-dotenv>=1.0.0
-toml>=0.10.2
 
 # For documentation
 mkdocs>=1.5.0
 
 # Cross-platform utilities
-Xlib>=0.33
 screen-brightness-control>=0.16.0
 usb>=1.2.1
-matplotlib>=3.8.0
 networkx>=3.2.0
 spacy>=3.7.0
 langdetect>=1.0.9
 keyboard>=0.13.5
-aiomysql>=0.2.0
-aioimaplib>=2.0.0
-aiosmtplib>=3.0.0
-dnspython>=2.6.0
 
 # Additional utilities
 ffmpeg-python>=0.2.0
 soundfile>=0.12.1
 PyYAML>=6.0.1
-
-# AI and ML dependencies
-torch>=2.0.0
-transformers>=4.30.0
 sentencepiece>=0.1.99
 protobuf>=4.24.0
-
-# Utility dependencies
-numpy>=1.24.0
 pandas>=2.0.0
-matplotlib>=3.7.0
 seaborn>=0.12.0
 
-# Testing dependencies
-pytest>=7.3.1
-pytest-asyncio>=0.21.0
-pytest-cov>=4.1.0
-
-# Development dependencies
-black>=23.3.0
-isort>=5.12.0
-flake8>=6.0.0
-mypy>=1.3.0
-
-# Platform-specific dependencies
-pyobjc-framework-AppKit>=9.2; sys_platform == 'darwin'
-pyobjc-framework-Foundation>=9.2; sys_platform == 'darwin'
-pyobjc-framework-IOKit>=9.2; sys_platform == 'darwin'
-python-bidi>=0.4.2; sys_platform == 'darwin'
-pygetwindow>=0.0.9; sys_platform == 'darwin'
-
-# New dependencies from the code block
-asyncio>=3.4.3
-typing-extensions>=4.8.0
-pydantic>=2.5.0
-fastapi>=0.104.0
-uvicorn>=0.24.0
-python-multipart>=0.0.6
-jinja2>=3.1.2
-markdown>=3.5.0
-pygments>=2.16.0
-watchdog>=3.0.0
-
-# Added from the code block
-pyautogui==0.9.54
-pytest==7.4.3
-pytest-asyncio==0.21.1
+# Testing and development (install with [dev] or [test] extras)
+# pytest, pytest-asyncio, pytest-cov, black, isort, flake8, mypy, etc. are not required for production installs.

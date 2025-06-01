@@ -1,0 +1,12 @@
+Take a screenshot of my desktop and save it.
+What is the weather in Cairo right now?
+Add 42 and 58.
+Search the web for the latest AI news.
+Copy the text Hello, world to the clipboard.
+Play the file music.wav.
+Open the calculator and calculate 7 times 8.
+افتح الحاسبة واحسب ١٢ زائد ٣٤
+ما هو الطقس في الرياض الآن؟
+خذ لقطة شاشة واحفظها
+ابحث في الإنترنت عن أحدث أخبار الذكاء الاصطناعي
+انسخ النص مرحبا إلى الحافظة

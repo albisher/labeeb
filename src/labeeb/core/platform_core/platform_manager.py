@@ -8,12 +8,11 @@ coordinating between different platform handlers and ensuring proper isolation.
 import os
 import logging
 from typing import Dict, Any, Optional, List, Type
-from .common.base_handler import BaseHandler
-from .mac.input_handler import MacInputHandler
-from .mac.audio_handler import MacAudioHandler
-from .mac.usb_handler import MacUSBHandler
-from labeeb.platform_services.common.system_info import BaseSystemInfoGatherer
-from labeeb.handlers.shell_handler import ShellHandler
+from labeeb.core.platform_core.handlers.base_handler import BaseHandler
+from labeeb.core.platform_core.handlers.mac.input_handler import MacInputHandler
+from labeeb.core.platform_core.handlers.mac.audio_handler import MacAudioHandler
+from labeeb.core.platform_core.handlers.mac.usb_handler import MacUSBHandler
+from labeeb.services.platform_services.common.system_info import BaseSystemInfoGatherer
 from .browser_handler import BaseBrowserHandler
 from .i18n import gettext as _, is_rtl, get_current_language, setup_language
 from labeeb.services.platform_services.common import platform_utils
@@ -56,13 +55,13 @@ class PlatformManager:
         "Linux": None,  # Will be lazily loaded
     }
     
-    _shell_handlers: Dict[str, Type[ShellHandler]] = {
+    _shell_handlers: Dict[str, Any] = {
         "Darwin": None,  # Will be lazily loaded
         "Windows": None,  # TODO: Implement Windows shell handler
         "Linux": None,  # TODO: Implement Linux shell handler
     }
     
-    _browser_handlers: Dict[str, Type[BaseBrowserHandler]] = {
+    _browser_handlers: Dict[str, Any] = {
         "Darwin": None,  # Will be lazily loaded
         "Windows": None,  # TODO: Implement Windows browser handler
         "Linux": None,  # TODO: Implement Linux browser handler
@@ -99,6 +98,9 @@ class PlatformManager:
             from .ubuntu.system_info import UbuntuSystemInfoGatherer
 
             self._system_info_gatherers["Linux"] = UbuntuSystemInfoGatherer
+        # Import ShellHandler only when needed
+        global ShellHandler
+        from labeeb.handlers.shell_handler import ShellHandler
     
     def _load_platform_handlers(self) -> None:
         """Load platform-specific handlers based on the current OS"""
@@ -189,7 +191,7 @@ class PlatformManager:
     def _initialize_handlers(self) -> None:
         """Initialize platform-specific handlers."""
         # Import MacDisplayHandler here to avoid circular import
-        from .mac.display_handler import MacDisplayHandler
+        from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
         
         # Map of handler types to their platform-specific implementations
         handler_map: Dict[str, Type[BaseHandler]] = {

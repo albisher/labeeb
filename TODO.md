@@ -29,6 +29,11 @@
 ### [ ] Documentation
 - [ ] Add usage example to each tool documentation in `docs/features/tools/` (see all `# TODO: Add usage example` lines).
 
+### [ ] Dependencies & Documentation
+- [x] Minimize dependencies in requirements.txt and setup.py to only those actually used.
+- [x] Update documentation to clarify minimal vs. dev dependencies and installation instructions.
+- [ ] Periodically review dependencies for minimalism and compliance with architecture rules.
+
 ---
 
 All TODOs are now tracked in this unified checklist. Remove all inline TODOs from code and documentation after adding them here. Mark each as complete with [x] when done.

@@ -27,7 +27,7 @@ This structure ensures that platform-specific code is properly isolated and mana
 ## Features
 
 - Multi-platform support with proper isolation
-- Advanced AI capabilities with A2A, MCP, and SmolAgents compliance
+- Advanced AI capabilities with A2A, MCP (Model Context Protocol), and SmolAgents compliance
 - Comprehensive tool integration
 - Modular and extensible architecture
 - Robust error handling and logging
@@ -35,7 +35,17 @@ This structure ensures that platform-specific code is properly isolated and mana
 
 ## Installation
 
-[Installation instructions will be added]
+To install Labeeb with only the minimal, production dependencies:
+```bash
+pip install .
+```
+
+For development and testing (with linting, formatting, and test tools):
+```bash
+pip install .[dev]
+```
+
+All dependencies are now minimized. Only packages actually used by the codebase are included in production installs. Development and test dependencies are available via the `[dev]` extra.
 
 ## Usage
 
@@ -77,7 +87,7 @@ python3 src/labeeb/main.py --tasks task1 task2
 
 - SmolAgents pattern for minimal, efficient agent implementation
 - A2A protocol for agent-to-agent communication
-- MCP protocol for unified channel support
+- MCP (Model Context Protocol) for standardized model context management and agent/model interaction
 - All contributors and users of the project
 
 ## Troubleshooting & System Dependencies
@@ -242,5 +252,5 @@ Labeeb is a cross-platform, multi-language AI agent system supporting English an
 - All changes are documented in real time
 - Project structure, naming, and file organization are strictly enforced
 - All issues, warnings, and bugs are addressed immediately
-- Compliance with A2A, MCP, and SmolAgents protocols
+- Compliance with A2A, MCP (Model Context Protocol), and SmolAgents protocols
 - All test artifacts are saved in the correct folders for auditability

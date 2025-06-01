@@ -5,7 +5,7 @@ This module provides platform-specific functionality and isolation.
 """
 
 from .platform_manager import platform_manager
-from .common.base_handler import BaseHandler
+from labeeb.core.platform_core.handlers.base_handler import BaseHandler
 
 from .platform_utils import (
     get_platform_name,
