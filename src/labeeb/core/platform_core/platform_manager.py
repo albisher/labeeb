@@ -24,7 +24,7 @@ class PlatformManager:
     """Manager for platform-specific functionality."""
     
     # Supported platforms
-    SUPPORTED_PLATFORMS = {"darwin": "macos", "linux": "ubuntu", "win32": "windows"}
+    SUPPORTED_PLATFORMS = {"darwin": "macos", "linux": "linux", "win32": "windows"}
     
     # Supported languages with RTL information
     SUPPORTED_LANGUAGES = {
@@ -96,8 +96,10 @@ class PlatformManager:
             self._system_info_gatherers["Windows"] = WindowsSystemInfoGatherer
         elif self.platform.startswith("linux"):
             from .ubuntu.system_info import UbuntuSystemInfoGatherer
+            from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
 
             self._system_info_gatherers["Linux"] = UbuntuSystemInfoGatherer
+            self._shell_handlers["Linux"] = LinuxShellHandler
         # Import ShellHandler only when needed
         global ShellHandler
         from labeeb.handlers.shell_handler import ShellHandler
@@ -113,9 +115,8 @@ class PlatformManager:
                 # Windows handlers will be loaded here
                 pass
             elif self.platform.startswith("linux"):
-                from .linux.clipboard_handler import LinuxClipboardHandler
-
-                self.handlers["clipboard"] = LinuxClipboardHandler()
+                # LinuxClipboardHandler not implemented; skipping registration
+                pass
         except Exception as e:
             logger.error(f"Error loading platform handlers: {str(e)}")
             raise
@@ -190,24 +191,28 @@ class PlatformManager:
     
     def _initialize_handlers(self) -> None:
         """Initialize platform-specific handlers."""
-        # Import MacDisplayHandler here to avoid circular import
-        from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
-        
-        # Map of handler types to their platform-specific implementations
-        handler_map: Dict[str, Type[BaseHandler]] = {
-            "input": MacInputHandler,
-            "audio": MacAudioHandler,
-            "display": MacDisplayHandler,
-            "usb": MacUSBHandler,
-            "shell": self._shell_handlers.get(self.platform_name, None),
-            "browser": self._browser_handlers.get(self.platform_name, None),
-        }
-        
+        if self.platform == "darwin":
+            from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
+            handler_map: Dict[str, Type[BaseHandler]] = {
+                "input": MacInputHandler,
+                "audio": MacAudioHandler,
+                "display": MacDisplayHandler,
+                "usb": MacUSBHandler,
+                "shell": self._shell_handlers.get(self.platform_name, None),
+                "browser": self._browser_handlers.get(self.platform_name, None),
+            }
+        elif self.platform.startswith("linux"):
+            from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
+            handler_map: Dict[str, Type[BaseHandler]] = {
+                "shell": LinuxShellHandler,
+            }
+        else:
+            handler_map: Dict[str, Type[BaseHandler]] = {}
+
         # Initialize each handler
         for handler_type, handler_class in handler_map.items():
             if handler_class is None:
                 continue
-                
             try:
                 handler = handler_class(self._config.get(handler_type, {}))
                 if handler.initialize():

@@ -92,6 +92,8 @@ class BaseHandler(Generic[T]):
                 handler_platform = "windows"
             elif handler_platform.startswith("jetson"):
                 handler_platform = "jetson"
+            elif handler_platform.startswith("linux"):
+                handler_platform = "linux"
 
             # Validate platform
             if current_platform != handler_platform:

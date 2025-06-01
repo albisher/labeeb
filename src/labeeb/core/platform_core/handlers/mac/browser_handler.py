@@ -8,7 +8,7 @@ import os
 import sys
 import logging
 from typing import Dict, Any, Optional, List
-from ..common.base_handler import BaseHandler
+from labeeb.core.platform_core.handlers.base_handler import BaseHandler
 from labeeb.core.utils import run_command
 import time
 import arabic_reshaper

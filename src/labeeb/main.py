@@ -96,7 +96,7 @@ class Labeeb:
             # Initialize platform manager with mode awareness
             self.platform_manager = PlatformManager()
             platform_name = platform_utils.get_platform_name()
-            if platform_name not in ["macos", "ubuntu", "windows"]:
+            if platform_name not in ["macos", "linux", "windows"]:
                 raise ConfigurationError(f"Unsupported platform: {platform_name}")
 
             # Initialize platform components

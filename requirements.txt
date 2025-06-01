@@ -32,7 +32,7 @@ python-dateutil>=2.8.2
 matplotlib>=3.8.0
 
 # RTL and Arabic language support
-arabic-reshaper>=3.0.0
+arabic_reshaper>=3.0.0
 python-bidi>=0.4.2
 
 # Platform specific dependencies
@@ -73,9 +73,6 @@ selenium>=4.18.1
 # System and device awareness
 pynput>=1.7.6
 
-# i18n and translation
-gettext>=0.21.0
-
 # Audio and vision
 pyaudio>=0.2.13
 
@@ -91,7 +88,7 @@ mkdocs>=1.5.0
 
 # Cross-platform utilities
 screen-brightness-control>=0.16.0
-usb>=1.2.1
+pyusb>=1.2.1
 networkx>=3.2.0
 spacy>=3.7.0
 langdetect>=1.0.9

@@ -9,7 +9,7 @@ import sys
 import unittest
 from typing import Dict, Any, Optional
 from src.app.platform_core.platform_manager import platform_manager
-from src.app.platform_core.common.base_handler import BaseHandler
+from labeeb.core.platform_core.handlers.base_handler import BaseHandler
 from src.app.platform_core.mac.input_handler import MacInputHandler
 from src.app.platform_core.mac.audio_handler import MacAudioHandler
 from src.app.platform_core.mac.display_handler import MacDisplayHandler

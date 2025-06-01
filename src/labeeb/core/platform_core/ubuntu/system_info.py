@@ -7,7 +7,7 @@ It uses various Linux commands to gather detailed system information specific to
 
 from typing import Dict, Any
 import subprocess
-from ..common.system_info import BaseSystemInfoGatherer
+from labeeb.services.platform_services.common.system_info import BaseSystemInfoGatherer
 
 
 class UbuntuSystemInfoGatherer(BaseSystemInfoGatherer):

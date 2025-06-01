@@ -112,7 +112,7 @@ class LinuxPlatform(PlatformInterface):
 
     def get_platform_name(self) -> str:
         """Return the name of the current platform."""
-        return "Linux"
+        return "linux"
 
     def get_system_info(self) -> Dict[str, Any]:
         """Return system information (alias for get_platform_info)."""
