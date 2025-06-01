@@ -7,6 +7,7 @@ It handles speech recognition, synthesis, and voice interaction capabilities.
 - TTS: Uses pyttsx3 (offline, cross-platform) or system TTS as fallback.
 - STT: Uses whisper (offline, cross-platform, local model).
 """
+
 import logging
 import platform
 import subprocess
@@ -15,20 +16,23 @@ from labeeb.core.platform_core.platform_utils import get_platform_name, is_mac, 
 
 try:
     import pyttsx3
+
     PYTTSX3_AVAILABLE = True
 except ImportError:
     PYTTSX3_AVAILABLE = False
 
 try:
     import whisper
+
     WHISPER_AVAILABLE = True
 except ImportError:
     WHISPER_AVAILABLE = False
 
+
 class SpeechTool:
-    name = 'speech'
+    name = "speech"
     description = "Text-to-Speech (TTS) and Speech-to-Text (STT) functionality"
-    
+
     def __init__(self):
         self.logger = logging.getLogger("SpeechTool")
         self.tts_engine = None
@@ -44,9 +48,9 @@ class SpeechTool:
         if self.tts_engine:
             try:
                 if lang:
-                    for voice in self.tts_engine.getProperty('voices'):
+                    for voice in self.tts_engine.getProperty("voices"):
                         if lang in voice.languages or lang in voice.id:
-                            self.tts_engine.setProperty('voice', voice.id)
+                            self.tts_engine.setProperty("voice", voice.id)
                             break
                 self.tts_engine.say(text)
                 self.tts_engine.runAndWait()
@@ -64,6 +68,7 @@ class SpeechTool:
                 return True
             elif system == "Windows":
                 import win32com.client
+
                 speaker = win32com.client.Dispatch("SAPI.SpVoice")
                 speaker.Speak(text)
                 return True
@@ -90,4 +95,4 @@ class SpeechTool:
         elif action == "stt":
             return await self.stt(kwargs.get("audio_path", ""), kwargs.get("model", "tiny"))
         else:
-            raise ValueError(f"Unknown action: {action}") 
+            raise ValueError(f"Unknown action: {action}")

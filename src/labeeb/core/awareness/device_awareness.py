@@ -15,11 +15,13 @@ import psutil
 import pyautogui
 from labeeb.core.platform_core.platform_utils import get_platform_name
 
+
 class DeviceAwarenessTool:
     """
     Tool for detecting and monitoring devices (USB, Audio, Screen) across platforms.
     """
-    name = 'device_awareness'
+
+    name = "device_awareness"
     description = "Detect and monitor devices (USB, Audio, Screen) across platforms"
 
     def __init__(self):
@@ -40,6 +42,7 @@ class DeviceAwarenessTool:
         """Setup device monitoring for macOS."""
         try:
             from Foundation import NSWorkspace
+
             self.ns_workspace = NSWorkspace
         except ImportError:
             self.logger.warning("NSWorkspace not available on macOS")
@@ -49,6 +52,7 @@ class DeviceAwarenessTool:
         """Setup device monitoring for Windows."""
         try:
             import win32com.client
+
             self.wmi = win32com.client.GetObject("winmgmts:")
         except ImportError:
             self.logger.warning("WMI not available on Windows")
@@ -58,6 +62,7 @@ class DeviceAwarenessTool:
         """Setup device monitoring for Linux."""
         try:
             import subprocess
+
             self.subprocess = subprocess
         except ImportError:
             self.logger.warning("subprocess not available on Linux")
@@ -94,11 +99,7 @@ class DeviceAwarenessTool:
             if self.ns_workspace:
                 mounted_volumes = self.ns_workspace.sharedWorkspace().mountedRemovableMedia()
                 for volume in mounted_volumes:
-                    devices.append({
-                        "name": str(volume),
-                        "type": "usb",
-                        "platform": "macos"
-                    })
+                    devices.append({"name": str(volume), "type": "usb", "platform": "macos"})
         except Exception as e:
             self.logger.error(f"Error getting macOS USB devices: {str(e)}")
         return devices
@@ -109,11 +110,9 @@ class DeviceAwarenessTool:
         try:
             if self.wmi:
                 for device in self.wmi.InstancesOf("Win32_USBHub"):
-                    devices.append({
-                        "name": device.DeviceName,
-                        "type": "usb",
-                        "platform": "windows"
-                    })
+                    devices.append(
+                        {"name": device.DeviceName, "type": "usb", "platform": "windows"}
+                    )
         except Exception as e:
             self.logger.error(f"Error getting Windows USB devices: {str(e)}")
         return devices
@@ -126,11 +125,7 @@ class DeviceAwarenessTool:
                 output = self.subprocess.check_output(["lsusb"]).decode()
                 for line in output.splitlines():
                     if line.strip():
-                        devices.append({
-                            "name": line.strip(),
-                            "type": "usb",
-                            "platform": "linux"
-                        })
+                        devices.append({"name": line.strip(), "type": "usb", "platform": "linux"})
         except Exception as e:
             self.logger.error(f"Error getting Linux USB devices: {str(e)}")
         return devices
@@ -140,16 +135,19 @@ class DeviceAwarenessTool:
         devices = []
         try:
             import pyaudio
+
             p = pyaudio.PyAudio()
             for i in range(p.get_device_count()):
                 device_info = p.get_device_info_by_index(i)
-                devices.append({
-                    "name": device_info.get("name"),
-                    "type": "audio",
-                    "inputs": device_info.get("maxInputChannels", 0),
-                    "outputs": device_info.get("maxOutputChannels", 0),
-                    "platform": self.system
-                })
+                devices.append(
+                    {
+                        "name": device_info.get("name"),
+                        "type": "audio",
+                        "inputs": device_info.get("maxInputChannels", 0),
+                        "outputs": device_info.get("maxOutputChannels", 0),
+                        "platform": self.system,
+                    }
+                )
             p.terminate()
         except ImportError:
             self.logger.warning("PyAudio not available for audio device detection")
@@ -163,29 +161,34 @@ class DeviceAwarenessTool:
         try:
             # Get primary screen info
             primary = pyautogui.size()
-            devices.append({
-                "name": "Primary Display",
-                "type": "screen",
-                "width": primary.width,
-                "height": primary.height,
-                "platform": self.system
-            })
-            
+            devices.append(
+                {
+                    "name": "Primary Display",
+                    "type": "screen",
+                    "width": primary.width,
+                    "height": primary.height,
+                    "platform": self.system,
+                }
+            )
+
             # Try to get additional screens
             if self.system == "Darwin":
                 try:
                     import Quartz
+
                     displays = Quartz.CGGetActiveDisplayList(10, None, None)[1]
                     for i, display in enumerate(displays):
                         if i > 0:  # Skip primary display
                             bounds = Quartz.CGDisplayBounds(display)
-                            devices.append({
-                                "name": f"Display {i+1}",
-                                "type": "screen",
-                                "width": int(bounds.size.width),
-                                "height": int(bounds.size.height),
-                                "platform": "macos"
-                            })
+                            devices.append(
+                                {
+                                    "name": f"Display {i+1}",
+                                    "type": "screen",
+                                    "width": int(bounds.size.width),
+                                    "height": int(bounds.size.height),
+                                    "platform": "macos",
+                                }
+                            )
                 except ImportError:
                     self.logger.warning("Quartz not available for screen detection")
         except Exception as e:
@@ -197,5 +200,5 @@ class DeviceAwarenessTool:
         return {
             "usb": await self.get_usb_devices(),
             "audio": await self.get_audio_devices(),
-            "screen": await self.get_screen_devices()
-        } 
+            "screen": await self.get_screen_devices(),
+        }

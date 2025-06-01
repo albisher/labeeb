@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+- Each protocol must define a single, well-specified communication or interaction standard (e.g., data exchange, authentication, event notification).
+- Protocols must be self-contained, encapsulating all necessary rules, formats, and procedures for their scope.
+- Expose clear message structures and interaction flows for each protocol.
+- Design protocols for integration with other protocols, services, tools, models, and workflows.
+- Support protocol extension or layering to enable more complex or domain-specific communication patterns.
+- Define clear input and output message formats to ensure seamless interoperability.
+- Thoroughly document all protocols, including purpose, message formats, supported operations, and usage examples.
+- Catalog all protocols in a central registry or protocol directory for easy discovery, selection, and reuse.
+- Assign each protocol a unique, descriptive name reflecting its function or domain, using kebab-case filenames (e.g., user-authentication-protocol.mdc).
+- Ensure protocols are robust, with comprehensive error handling, fallback procedures, and clear error messages.
+- Support monitoring, logging, and versioning for each protocol to facilitate maintenance and traceability.
+- Test protocols both in isolation and as part of integrated flows to ensure reliable operation.
+- Define and enforce authentication, authorization, and encryption requirements as appropriate for each protocol's context.
+- Protect sensitive data in transit and at rest, following best security practices and compliance requirements.
+- Design protocols to function consistently across multiple platforms and environments.
+- Use standardized formats (e.g., JSON, XML, Protobuf) and transport mechanisms (e.g., HTTP, WebSocket, gRPC) for protocol messages and exchanges.
+- Each protocol definition file must describe a single protocol (one protocol per file).
+- Start each file with a YAML frontmatter block specifying: description, message_formats, operations, dependencies, security, version, alwaysApply.
+- Define the protocol's message flows, structures, and procedures as a clear, ordered list or diagram. Specify assumptions, constraints, and error handling logic where relevant.
+- Keep protocol definitions focused and modular; decompose complex protocols into smaller, specialized protocols if needed.
+- Reference any supporting files, schemas, or templates using @filename.ext at the end of the file.
+
+## Minimal Protocol File Example
+
+```
+---
+description: Protocol for user authentication, including login and token refresh.
+message_formats: [login-request.json, login-response.json, token-refresh-request.json, token-refresh-response.json]
+operations: [login, token_refresh]
+dependencies: [user-profile-model, auth-service]
+security: TLS encryption, JWT authentication
+version: 1.0.0
+alwaysApply: false
+---
+
+- Define `login` operation: client sends `login-request.json`, server responds with `login-response.json`.
+- Define `token_refresh` operation: client sends `token-refresh-request.json`, server responds with `token-refresh-response.json`.
+- All messages must be transmitted over TLS-encrypted channels.
+- Authentication tokens must be signed JWTs.
+- Log all authentication attempts and errors.
+- Handle and report protocol errors with standardized error codes and messages.
+@login-request.json
+@login-response.json
+@token-refresh-request.json
+@token-refresh-response.json
+@user-profile-model.mdc
+@auth-service.mdc
+```
+
+# Changelog
+- v1.0: Initial version, compliant with rule-structure-standards.mdc.

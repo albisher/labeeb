@@ -6,12 +6,14 @@ from labeeb.core.ai.mcp_protocol import MCPProtocol
 from labeeb.core.ai.smol_agent import SmolAgentProtocol
 from typing import Dict, Any, Optional, Union
 
+
 class PlannerAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     """
     PlannerAgent: Decomposes high-level commands into multi-step plans.
     Can ask for research (via ResearcherAgent) or use search (via InformationCollectorAgent).
     Implements A2A, MCP, and SmolAgents protocols for enhanced agent communication.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.researcher = ResearcherAgent()
@@ -20,7 +22,9 @@ class PlannerAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
         self.mcp_protocol = MCPProtocol()
         self.smol_protocol = SmolAgentProtocol()
 
-    async def plan(self, command: str, params: Dict[str, Any]) -> Union[Dict[str, Any], MultiStepPlan]:
+    async def plan(
+        self, command: str, params: Dict[str, Any]
+    ) -> Union[Dict[str, Any], MultiStepPlan]:
         """
         Decompose a command into a MultiStepPlan or delegate to sub-agents.
         """
@@ -35,7 +39,11 @@ class PlannerAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
             if "research" in lc:
                 result = {"agent": "researcher", "action": "research", "params": {"topic": command}}
             elif "search" in lc or "find" in lc:
-                result = {"agent": "information_collector", "action": "collect_info", "params": {"query": command}}
+                result = {
+                    "agent": "information_collector",
+                    "action": "collect_info",
+                    "params": {"query": command},
+                }
             else:
                 # Fallback: single-step echo
                 result = {"tool": "echo", "action": "say", "params": {"text": command}}
@@ -68,4 +76,4 @@ class PlannerAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
         await self.smol_protocol.register_capability(capability, handler)
 
     async def unregister_capability(self, capability: str) -> None:
-        await self.smol_protocol.unregister_capability(capability) 
+        await self.smol_protocol.unregister_capability(capability)

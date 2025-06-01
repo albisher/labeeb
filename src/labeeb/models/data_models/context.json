@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Context",
+  "type": "object",
+  "properties": {
+    "user_id": {"type": "string"},
+    "session_id": {"type": "string"},
+    "environment": {"type": "object"},
+    "variables": {"type": "object"}
+  },
+  "required": ["user_id", "session_id"]
+} 

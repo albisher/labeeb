@@ -7,12 +7,14 @@ from labeeb.core.ai.mcp_protocol import MCPProtocol
 from labeeb.core.ai.smol_agent import SmolAgentProtocol
 from typing import Dict, Any
 
+
 class InformationCollectorAgent(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     """
     Agent that gathers data from tools (system, web, files).
     Plans and executes information collection workflows.
     Implements A2A, MCP, and SmolAgents protocols for enhanced agent communication.
     """
+
     def __init__(self):
         super().__init__()
         self.name = "InformationCollector"
@@ -41,7 +43,9 @@ class InformationCollectorAgent(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentPr
                 results["system"] = await self.system_tool.execute("info", {})
             # Web search
             if "web" in query or "search" in query or "online" in query:
-                results["web_search"] = await self.web_search_tool.execute("search", {"query": query})
+                results["web_search"] = await self.web_search_tool.execute(
+                    "search", {"query": query}
+                )
             # File listing
             if "file" in query or "document" in query or "list" in query:
                 results["files"] = await self.file_tool.execute("list", {"directory": "."})
@@ -74,4 +78,4 @@ class InformationCollectorAgent(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentPr
         await self.smol_protocol.register_capability(capability, handler)
 
     async def unregister_capability(self, capability: str) -> None:
-        await self.smol_protocol.unregister_capability(capability) 
+        await self.smol_protocol.unregister_capability(capability)

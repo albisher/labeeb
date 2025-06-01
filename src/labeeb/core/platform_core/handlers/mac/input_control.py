@@ -5,4 +5,4 @@ on macOS systems. It includes functionality for simulating keyboard events, mous
 and clicks using the macOS-specific APIs.
 """
 
-from typing import Dict, Any, Optional, Tuple, List, Union 
+from typing import Dict, Any, Optional, Tuple, List, Union

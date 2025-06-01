@@ -11,6 +11,7 @@ from ..core.platform_core import get_platform_name, get_file_path
 
 logger = logging.getLogger(__name__)
 
+
 class FolderFinder:
     def __init__(self):
         """Initialize the folder finder."""
@@ -21,28 +22,36 @@ class FolderFinder:
         notes_folders = []
 
         # First check for platform-specific notes folders
-        if self.platform_name == 'darwin':
-            notes_folders.extend([
-                get_file_path(os.path.expanduser('~/Documents/Notes')),
-                get_file_path(os.path.expanduser('~/Library/Application Support/Notes'))
-            ])
-        elif self.platform_name == 'windows':
-            notes_folders.extend([
-                get_file_path(os.path.expanduser('~/Documents/Notes')),
-                get_file_path(os.path.expanduser('~/OneDrive/Notes'))
-            ])
-        elif self.platform_name == 'linux':
-            notes_folders.extend([
-                get_file_path(os.path.expanduser('~/Documents/Notes')),
-                get_file_path(os.path.expanduser('~/.local/share/notes'))
-            ])
+        if self.platform_name == "darwin":
+            notes_folders.extend(
+                [
+                    get_file_path(os.path.expanduser("~/Documents/Notes")),
+                    get_file_path(os.path.expanduser("~/Library/Application Support/Notes")),
+                ]
+            )
+        elif self.platform_name == "windows":
+            notes_folders.extend(
+                [
+                    get_file_path(os.path.expanduser("~/Documents/Notes")),
+                    get_file_path(os.path.expanduser("~/OneDrive/Notes")),
+                ]
+            )
+        elif self.platform_name == "linux":
+            notes_folders.extend(
+                [
+                    get_file_path(os.path.expanduser("~/Documents/Notes")),
+                    get_file_path(os.path.expanduser("~/.local/share/notes")),
+                ]
+            )
 
         # Add common notes folders
-        notes_folders.extend([
-            get_file_path(os.path.expanduser('~/Notes')),
-            get_file_path(os.path.expanduser('~/Documents/Notes')),
-            get_file_path(os.path.expanduser('~/Desktop/Notes'))
-        ])
+        notes_folders.extend(
+            [
+                get_file_path(os.path.expanduser("~/Notes")),
+                get_file_path(os.path.expanduser("~/Documents/Notes")),
+                get_file_path(os.path.expanduser("~/Desktop/Notes")),
+            ]
+        )
 
         return [folder for folder in notes_folders if os.path.exists(folder)]
 
@@ -50,23 +59,30 @@ class FolderFinder:
         """Find configuration folders based on platform."""
         config_folders = []
 
-        if self.platform_name == 'darwin':
-            config_folders.extend([
-                get_file_path(os.path.expanduser('~/Library/Application Support/Labeeb')),
-                get_file_path(os.path.expanduser('~/Library/Preferences/Labeeb'))
-            ])
-        elif self.platform_name == 'windows':
-            config_folders.extend([
-                get_file_path(os.path.expanduser('~/AppData/Roaming/Labeeb')),
-                get_file_path(os.path.expanduser('~/AppData/Local/Labeeb'))
-            ])
-        elif self.platform_name == 'linux':
-            config_folders.extend([
-                get_file_path(os.path.expanduser('~/.config/Labeeb')),
-                get_file_path(os.path.expanduser('~/.local/share/Labeeb'))
-            ])
+        if self.platform_name == "darwin":
+            config_folders.extend(
+                [
+                    get_file_path(os.path.expanduser("~/Library/Application Support/Labeeb")),
+                    get_file_path(os.path.expanduser("~/Library/Preferences/Labeeb")),
+                ]
+            )
+        elif self.platform_name == "windows":
+            config_folders.extend(
+                [
+                    get_file_path(os.path.expanduser("~/AppData/Roaming/Labeeb")),
+                    get_file_path(os.path.expanduser("~/AppData/Local/Labeeb")),
+                ]
+            )
+        elif self.platform_name == "linux":
+            config_folders.extend(
+                [
+                    get_file_path(os.path.expanduser("~/.config/Labeeb")),
+                    get_file_path(os.path.expanduser("~/.local/share/Labeeb")),
+                ]
+            )
 
         return [folder for folder in config_folders if os.path.exists(folder)]
+
 
 def get_fixed_method():
     """Returns the fixed implementation of find_folders"""
@@ -223,12 +239,13 @@ def get_fixed_method():
         except Exception as e:
             return f"Error searching for folders: {str(e)}"'''
 
+
 def main():
     """Main entry point"""
     # Read the shell_handler.py file
-    with open('core/shell_handler.py', 'r') as f:
+    with open("core/shell_handler.py", "r") as f:
         content = f.readlines()
-        
+
     # Find the start of the find_folders method
     start_line = -1
     end_line = -1
@@ -236,11 +253,11 @@ def main():
         if "def find_folders(" in line:
             start_line = i
             break
-            
+
     if start_line == -1:
         print("Could not find find_folders method in shell_handler.py!")
         return
-        
+
     # Find the end of the method - look for the next method or class definition
     for i in range(start_line + 1, len(content)):
         if "def " in content[i] and "(" in content[i]:
@@ -249,35 +266,38 @@ def main():
         if "class " in content[i] and ":" in content[i]:
             end_line = i
             break
-            
+
     if end_line == -1:
         end_line = len(content)  # Assume it's the last method in the file
-        
+
     # Get the content before and after the method
     content_before = content[:start_line]
     content_after = content[end_line:]
-    
+
     # Create new content with updated method
-    fixed_method = get_fixed_method().split('\n')
-    fixed_method = [line + '\n' for line in fixed_method]
-    
+    fixed_method = get_fixed_method().split("\n")
+    fixed_method = [line + "\n" for line in fixed_method]
+
     new_content = content_before + fixed_method + content_after
-    
+
     # Backup the original file
-    backup_file = 'core/shell_handler.py.bak'
+    backup_file = "core/shell_handler.py.bak"
     i = 1
     while os.path.exists(backup_file):
-        backup_file = f'core/shell_handler.py.bak{i}'
+        backup_file = f"core/shell_handler.py.bak{i}"
         i += 1
-        
-    with open(backup_file, 'w') as f:
+
+    with open(backup_file, "w") as f:
         f.writelines(content)
-        
+
     # Write the updated file
-    with open('core/shell_handler.py', 'w') as f:
+    with open("core/shell_handler.py", "w") as f:
         f.writelines(new_content)
-        
-    print(f"Successfully updated find_folders in shell_handler.py (original backed up to {backup_file})")
+
+    print(
+        f"Successfully updated find_folders in shell_handler.py (original backed up to {backup_file})"
+    )
+
 
 if __name__ == "__main__":
     finder = FolderFinder()

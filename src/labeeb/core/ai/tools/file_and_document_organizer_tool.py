@@ -23,11 +23,14 @@ See also:
 - docs/architecture/tools.md for tool architecture overview
 """
 
+
 class FileAndDocumentOrganizerTool(Tool, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     name = "file_and_document_organizer"
 
     def __init__(self, config: Dict[str, Any] = None):
-        super().__init__(name=self.name, description="Tool for organizing and managing files and documents")
+        super().__init__(
+            name=self.name, description="Tool for organizing and managing files and documents"
+        )
         self.config = config or {}
 
     async def execute(self, action: str, params: dict) -> any:
@@ -62,4 +65,4 @@ class FileAndDocumentOrganizerTool(Tool, A2AProtocol, MCPProtocol, SmolAgentProt
         pass
 
     async def unregister_capability(self, capability: str) -> None:
-        pass 
+        pass

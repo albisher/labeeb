@@ -26,12 +26,14 @@ if system in ("Windows", "Darwin"):
 else:
     gw = None
 
+
 class SystemAwarenessTool:
     """
     Labeeb System Awareness Tool ('I know')
     Provides awareness of system state, mouse, windows, keyboard, processes, and more.
     This tool is for knowing, not doing.
     """
+
     def execute(self, action: str, **kwargs) -> Any:
         if action == "get_mouse_position":
             return self.get_mouse_position()
@@ -61,10 +63,7 @@ class SystemAwarenessTool:
             color = pyautogui.screenshot().getpixel(pos)
         except Exception:
             color = None
-        return {
-            'position': pos,
-            'color': color
-        }
+        return {"position": pos, "color": color}
 
     def get_system_info(self) -> Dict[str, Any]:
         """Return basic system information."""
@@ -73,14 +72,16 @@ class SystemAwarenessTool:
             "os_version": platform.version(),
             "cpu_usage": psutil.cpu_percent(),
             "memory_usage": psutil.virtual_memory().percent,
-            "disk_usage": psutil.disk_usage('/').percent,
-            "current_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "disk_usage": psutil.disk_usage("/").percent,
+            "current_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
 
     def get_process_list(self) -> List[Dict[str, Any]]:
         """Return a list of running processes."""
         processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'username', 'cpu_percent', 'memory_percent']):
+        for proc in psutil.process_iter(
+            ["pid", "name", "username", "cpu_percent", "memory_percent"]
+        ):
             try:
                 info = proc.info
                 processes.append(info)
@@ -93,21 +94,21 @@ class SystemAwarenessTool:
         if gw is None:
             return []
         system = get_platform_name()
-        if system == 'Windows':
+        if system == "Windows":
             return [
                 {
-                    'title': w.title,
-                    'left': w.left,
-                    'top': w.top,
-                    'width': w.width,
-                    'height': w.height
+                    "title": w.title,
+                    "left": w.left,
+                    "top": w.top,
+                    "width": w.width,
+                    "height": w.height,
                 }
                 for w in gw.getAllWindows()
             ]
-        elif system == 'Darwin':
+        elif system == "Darwin":
             try:
                 titles = gw.getAllTitles()
-                return [{'title': t} for t in titles if t.strip()]
+                return [{"title": t} for t in titles if t.strip()]
             except Exception:
                 return []
         else:
@@ -121,20 +122,20 @@ class SystemAwarenessTool:
         w = gw.getActiveWindow()
         if w:
             return {
-                'title': w.title,
-                'left': getattr(w, 'left', None),
-                'top': getattr(w, 'top', None),
-                'width': getattr(w, 'width', None),
-                'height': getattr(w, 'height', None)
+                "title": w.title,
+                "left": getattr(w, "left", None),
+                "top": getattr(w, "top", None),
+                "width": getattr(w, "width", None),
+                "height": getattr(w, "height", None),
             }
         return None
 
     def get_system_resources(self) -> Dict[str, any]:
         """Return CPU, memory, and disk usage info."""
         return {
-            'cpu_percent': psutil.cpu_percent(),
-            'memory': psutil.virtual_memory()._asdict(),
-            'disk': psutil.disk_usage('/')._asdict()
+            "cpu_percent": psutil.cpu_percent(),
+            "memory": psutil.virtual_memory()._asdict(),
+            "disk": psutil.disk_usage("/")._asdict(),
         }
 
     def get_active_app(self) -> Optional[str]:
@@ -142,9 +143,10 @@ class SystemAwarenessTool:
         if is_mac():
             try:
                 import subprocess
+
                 script = 'tell application "System Events" to get name of (processes where frontmost is true)'
-                out = subprocess.check_output(['osascript', '-e', script])
-                return out.decode('utf-8').strip().split(',')[0]
+                out = subprocess.check_output(["osascript", "-e", script])
+                return out.decode("utf-8").strip().split(",")[0]
             except Exception:
                 return None
         elif is_windows() and gw is not None:
@@ -159,27 +161,24 @@ class SystemAwarenessTool:
             ip = socket.gethostbyname(hostname)
         except Exception:
             ip = None
-        return {
-            'hostname': hostname,
-            'ip': ip
-        }
+        return {"hostname": hostname, "ip": ip}
 
     def get_uptime(self) -> str:
         """Return system uptime as a human-readable string."""
         boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
         now = datetime.datetime.now()
         delta = now - boot_time
-        return str(delta).split('.')[0]
+        return str(delta).split(".")[0]
 
     def get_battery_info(self) -> Optional[Dict[str, any]]:
         """Return battery status if available."""
-        if hasattr(psutil, 'sensors_battery'):
+        if hasattr(psutil, "sensors_battery"):
             batt = psutil.sensors_battery()
             if batt:
                 return {
-                    'percent': batt.percent,
-                    'plugged': batt.power_plugged,
-                    'secsleft': batt.secsleft
+                    "percent": batt.percent,
+                    "plugged": batt.power_plugged,
+                    "secsleft": batt.secsleft,
                 }
         return None
 
@@ -194,22 +193,113 @@ class SystemAwarenessTool:
     def get_time_info(self) -> Dict[str, str]:
         """Return current time, timezone, and locale info."""
         import locale
+
         return {
-            'now': datetime.datetime.now().isoformat(),
-            'timezone': datetime.datetime.now(datetime.timezone.utc).astimezone().tzname(),
-            'locale': locale.getdefaultlocale()[0]
+            "now": datetime.datetime.now().isoformat(),
+            "timezone": datetime.datetime.now(datetime.timezone.utc).astimezone().tzname(),
+            "locale": locale.getdefaultlocale()[0],
         }
 
     def get_editing_apps(self) -> List[Dict[str, any]]:
         """Return a list of processes likely to be editing or listening (editors, recorders, terminals, etc)."""
         editing_keywords = [
-            'code', 'editor', 'notepad', 'sublime', 'vim', 'emacs', 'nano', 'word', 'excel',
-            'powerpoint', 'pages', 'numbers', 'keynote', 'audacity', 'recorder', 'terminal', 'iterm', 'cmd', 'powershell', 'pycharm', 'idea', 'jupyter', 'obs', 'zoom', 'teams', 'slack', 'discord', 'skype', 'screen', 'listen', 'record', 'studio', 'logic', 'garageband', 'photoshop', 'gimp', 'paint', 'draw', 'inkscape', 'illustrator', 'premiere', 'aftereffects', 'finalcut', 'resolve', 'blender', 'maya', 'cad', 'autocad', 'fusion', 'solidworks', 'matlab', 'octave', 'spyder', 'rstudio', 'notion', 'onenote', 'evernote', 'scrivener', 'writer', 'composer', 'audition', 'sound', 'music', 'video', 'vlc', 'media', 'player', 'quicktime', 'preview', 'pdf', 'acrobat', 'foxit', 'sumatra', 'evince', 'okular', 'zathura', 'calibre', 'kindle', 'ebook', 'reader', 'browser', 'chrome', 'firefox', 'safari', 'edge', 'opera', 'brave', 'vivaldi', 'explorer', 'finder', 'explorer.exe', 'finder.app'
+            "code",
+            "editor",
+            "notepad",
+            "sublime",
+            "vim",
+            "emacs",
+            "nano",
+            "word",
+            "excel",
+            "powerpoint",
+            "pages",
+            "numbers",
+            "keynote",
+            "audacity",
+            "recorder",
+            "terminal",
+            "iterm",
+            "cmd",
+            "powershell",
+            "pycharm",
+            "idea",
+            "jupyter",
+            "obs",
+            "zoom",
+            "teams",
+            "slack",
+            "discord",
+            "skype",
+            "screen",
+            "listen",
+            "record",
+            "studio",
+            "logic",
+            "garageband",
+            "photoshop",
+            "gimp",
+            "paint",
+            "draw",
+            "inkscape",
+            "illustrator",
+            "premiere",
+            "aftereffects",
+            "finalcut",
+            "resolve",
+            "blender",
+            "maya",
+            "cad",
+            "autocad",
+            "fusion",
+            "solidworks",
+            "matlab",
+            "octave",
+            "spyder",
+            "rstudio",
+            "notion",
+            "onenote",
+            "evernote",
+            "scrivener",
+            "writer",
+            "composer",
+            "audition",
+            "sound",
+            "music",
+            "video",
+            "vlc",
+            "media",
+            "player",
+            "quicktime",
+            "preview",
+            "pdf",
+            "acrobat",
+            "foxit",
+            "sumatra",
+            "evince",
+            "okular",
+            "zathura",
+            "calibre",
+            "kindle",
+            "ebook",
+            "reader",
+            "browser",
+            "chrome",
+            "firefox",
+            "safari",
+            "edge",
+            "opera",
+            "brave",
+            "vivaldi",
+            "explorer",
+            "finder",
+            "explorer.exe",
+            "finder.app",
         ]
         procs = self.get_process_list()
         editing_procs = []
         for p in procs:
-            name = (p.get('name') or '').lower()
+            name = (p.get("name") or "").lower()
             if any(k in name for k in editing_keywords):
                 editing_procs.append(p)
-        return editing_procs 
+        return editing_procs

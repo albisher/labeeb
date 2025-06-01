@@ -22,6 +22,7 @@ See also:
 - docs/architecture/tools.md for tool architecture overview
 """
 
+
 class CodePathUpdaterTool(Tool, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     name = "code_path_updater"
 
@@ -61,4 +62,4 @@ class CodePathUpdaterTool(Tool, A2AProtocol, MCPProtocol, SmolAgentProtocol):
         pass
 
     async def unregister_capability(self, capability: str) -> None:
-        pass 
+        pass

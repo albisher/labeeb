@@ -2,6 +2,7 @@
 GraphMakerTool: Generates graphs from folder data using InformationCollectorAgent and matplotlib.
 Outputs are saved in a dedicated work folder under Documents.
 """
+
 from typing import Dict, Any
 from labeeb.core.ai.base_agent import BaseAgent, Agent
 from labeeb.core.ai.a2a_protocol import A2AProtocol
@@ -11,6 +12,7 @@ import os
 import matplotlib.pyplot as plt
 from labeeb.core.ai.agents.information_collector import InformationCollectorAgent
 
+
 class GraphMakerTool(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     """
     Tool for generating graphs from folder data.
@@ -18,9 +20,10 @@ class GraphMakerTool(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     Can consult with other agents to decide the best graph to generate.
     Implements A2A, MCP, and SmolAgents protocols for enhanced agent communication and coordination.
     """
+
     name = "graph_maker"
     description = "Tool for generating graphs from folder data"
-    
+
     def __init__(self, work_dir=None, collector_agent=None, *args, **kwargs):
         super().__init__(name=self.name, *args, **kwargs)
         if work_dir is None:
@@ -35,7 +38,7 @@ class GraphMakerTool(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     async def execute(self, command: str, params: dict = None, action: str = None) -> any:
         """Execute the agent's main functionality."""
         params = params or {}
-        debug = params.get('debug', False)
+        debug = params.get("debug", False)
         if debug:
             print(f"[DEBUG] GraphMakerTool received command: {command} with params: {params}")
 
@@ -43,7 +46,9 @@ class GraphMakerTool(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
             # Notify A2A protocol before execution
             await self.a2a_protocol.notify_action("execute", {"command": command, "params": params})
             # Use MCP for execution
-            await self.mcp_protocol.execute_action("execute", {"command": command, "params": params})
+            await self.mcp_protocol.execute_action(
+                "execute", {"command": command, "params": params}
+            )
 
             # Step 1: Collect info (consult collector agent)
             folder = params.get("folder", ".")
@@ -108,4 +113,4 @@ class GraphMakerTool(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
         await self.smol_protocol.register_capability(capability, handler)
 
     async def unregister_capability(self, capability: str) -> None:
-        await self.smol_protocol.unregister_capability(capability) 
+        await self.smol_protocol.unregister_capability(capability)

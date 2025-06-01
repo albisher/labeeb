@@ -6,8 +6,8 @@ from .fs.macos_fs import MacOSFileSystem
 from ..platform_factory import PlatformFactory
 
 # Register macOS implementations
-PlatformFactory.register_system_impl('macos', MacOSSystem)
-PlatformFactory.register_ui_impl('macos', MacOSUI)
-PlatformFactory.register_network_impl('macos', MacOSNetwork)
-PlatformFactory.register_audio_impl('macos', MacOSAudio)
-PlatformFactory.register_fs_impl('macos', MacOSFileSystem) 
+PlatformFactory.register_system_impl("macos", MacOSSystem)
+PlatformFactory.register_ui_impl("macos", MacOSUI)
+PlatformFactory.register_network_impl("macos", MacOSNetwork)
+PlatformFactory.register_audio_impl("macos", MacOSAudio)
+PlatformFactory.register_fs_impl("macos", MacOSFileSystem)

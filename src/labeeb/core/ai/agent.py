@@ -30,6 +30,7 @@ Workflow Orchestration:
 - Each step is executed and tracked in memory.
 - Parallel/conditional logic is stubbed for future extension.
 """
+
 from typing import Any, Dict, List, Optional, Callable, Union, Protocol, TypeVar, Generic
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -69,6 +70,7 @@ import os
 # Setup translation (i18n)
 _ = gettext.gettext
 
+
 def safe_path(filename: str, category: str = "test") -> str:
     """
     Ensure files are saved in the correct directory based on category.
@@ -78,31 +80,37 @@ def safe_path(filename: str, category: str = "test") -> str:
         "test": "tests/fixtures/",
         "log": "log/",
         "state": "src/labeeb/state/",
-        "core": "src/labeeb/core/"
+        "core": "src/labeeb/core/",
     }
     if category in base_dirs:
         os.makedirs(base_dirs[category], exist_ok=True)
         return os.path.join(base_dirs[category], filename)
     return filename
 
+
 @dataclass
 class AgentMemory:
     """Rich memory/state for multi-step workflows."""
+
     steps: List[Dict[str, Any]] = field(default_factory=list)
     context: Dict[str, Any] = field(default_factory=dict)
     created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    conversation: List[Dict[str, str]] = field(default_factory=list)  # [{"user": ..., "agent": ...}]
+    conversation: List[Dict[str, str]] = field(
+        default_factory=list
+    )  # [{"user": ..., "agent": ...}]
 
     def add_step(self, command: str, action: str, params: Dict[str, Any], result: Any):
         """Add a step to the memory."""
-        self.steps.append({
-            "timestamp": datetime.utcnow().isoformat(),
-            "command": command,
-            "action": action,
-            "params": params,
-            "result": result
-        })
+        self.steps.append(
+            {
+                "timestamp": datetime.utcnow().isoformat(),
+                "command": command,
+                "action": action,
+                "params": params,
+                "result": result,
+            }
+        )
         self.updated_at = datetime.utcnow().isoformat()
 
     def add_conversation(self, user: str, agent: str):
@@ -122,31 +130,40 @@ class AgentMemory:
         self.context = {}
         self.updated_at = datetime.utcnow().isoformat()
 
+
 @dataclass
 class PlanStep:
     """A single step in a multi-step plan."""
+
     action: str
     params: Dict[str, Any]
     description: str
     required_tools: List[str]
     expected_result: Optional[Any] = None
 
+
 @dataclass
 class MultiStepPlan:
     """A plan consisting of multiple steps."""
+
     steps: List[PlanStep]
     description: str
     required_tools: List[str]
     expected_result: Optional[Any] = None
 
+
 class LLMPlanner:
     """
     Stub for an LLM-based planner. In a real system, this would call an LLM to interpret natural language and return a plan.
     """
+
     def plan(self, command: str, params: Dict[str, Any]) -> Union[Dict[str, Any], MultiStepPlan]:
         # Add app_control tool routing
         lc = command.lower()
-        if any(keyword in lc for keyword in ["open app", "close app", "focus app", "minimize app", "maximize app"]):
+        if any(
+            keyword in lc
+            for keyword in ["open app", "close app", "focus app", "minimize app", "maximize app"]
+        ):
             # Extract action and app name
             for action in ["open", "close", "focus", "minimize", "maximize"]:
                 if action + " app" in lc:
@@ -157,20 +174,30 @@ class LLMPlanner:
         # Existing logic for known tools
         known_tools = ["echo", "file"]
         if command in known_tools:
-            return {"tool": command, "action": "say" if command == "echo" else "create_file", "params": params}
+            return {
+                "tool": command,
+                "action": "say" if command == "echo" else "create_file",
+                "params": params,
+            }
         # Example: if command is 'create and read file', decompose into two steps
         if command == "create and read file":
-            return MultiStepPlan(steps=[
-                PlanStep(tool="file", action="create_file", params=params),
-                PlanStep(tool="file", action="read_file", params={"path": params.get("filename")})
-            ])
+            return MultiStepPlan(
+                steps=[
+                    PlanStep(tool="file", action="create_file", params=params),
+                    PlanStep(
+                        tool="file", action="read_file", params={"path": params.get("filename")}
+                    ),
+                ]
+            )
         # Default: single-step echo
         return {"tool": "echo", "action": "say", "params": {"text": command}}
+
 
 class OllamaLLMPlanner(LLMPlanner):
     """
     Planner that uses Ollama (e.g., gemma3:latest) for natural language to plan decomposition.
     """
+
     def __init__(self, model_name: str = "gemma3:latest", base_url: str = "http://localhost:11434"):
         self.model_name = model_name
         self.base_url = base_url
@@ -178,7 +205,10 @@ class OllamaLLMPlanner(LLMPlanner):
     def plan(self, command: str, params: Dict[str, Any]) -> Dict[str, Any]:
         # Add app_control tool routing
         lc = command.lower()
-        if any(keyword in lc for keyword in ["open app", "close app", "focus app", "minimize app", "maximize app"]):
+        if any(
+            keyword in lc
+            for keyword in ["open app", "close app", "focus app", "minimize app", "maximize app"]
+        ):
             for action in ["open", "close", "focus", "minimize", "maximize"]:
                 if action + " app" in lc:
                     parts = lc.split(action + " app", 1)
@@ -190,7 +220,7 @@ class OllamaLLMPlanner(LLMPlanner):
             payload = {
                 "model": self.model_name,
                 "prompt": f"User command: {command}\nRespond with a JSON: {{'tool': tool_name, 'action': action, 'params': params_dict}}",
-                "stream": False
+                "stream": False,
             }
             resp = requests.post(url, json=payload, timeout=5)
             if resp.ok:
@@ -228,7 +258,7 @@ class OllamaLLMPlanner(LLMPlanner):
             r"حلل الشاشة",
             r"اعرض لي وصف الشاشة",
             r"ما الموجود في الصورة ['\"]?([^'\" ]+)['\"]?",
-            r"صف الصورة ['\"]?([^'\" ]+)['\"]?"
+            r"صف الصورة ['\"]?([^'\" ]+)['\"]?",
         ]
         for pattern in vision_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
@@ -236,25 +266,29 @@ class OllamaLLMPlanner(LLMPlanner):
                 image_path = match.groups()[-1].strip("'\"") if match.groups() else None
                 if image_path and not any(x in image_path for x in ["screen", "الشاشة"]):
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="vision",
-                            params={"action": "analyze_image", "image_path": image_path},
-                            description=f"Analyze image {image_path}",
-                            required_tools=["vision"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="vision",
+                                params={"action": "analyze_image", "image_path": image_path},
+                                description=f"Analyze image {image_path}",
+                                required_tools=["vision"],
+                            )
+                        ],
                         description=f"Analyze image {image_path}",
-                        required_tools=["vision"]
+                        required_tools=["vision"],
                     )
                 else:
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="vision",
-                            params={"action": "analyze_image"},
-                            description="Analyze the current screen",
-                            required_tools=["vision"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="vision",
+                                params={"action": "analyze_image"},
+                                description="Analyze the current screen",
+                                required_tools=["vision"],
+                            )
+                        ],
                         description="Analyze the current screen",
-                        required_tools=["vision"]
+                        required_tools=["vision"],
                     )
         # 2. Screenshot (robust filename/folder extraction)
         screenshot_patterns = [
@@ -264,7 +298,7 @@ class OllamaLLMPlanner(LLMPlanner):
             r"لقط الشاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?",
             r"صور الشاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?",
             r"خذ لقطة شاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?",
-            r"صوّر الشاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?"
+            r"صوّر الشاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?",
         ]
         for pattern in screenshot_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
@@ -294,128 +328,150 @@ class OllamaLLMPlanner(LLMPlanner):
                     file_path = os.path.expanduser(filename)
                 elif folder:
                     os.makedirs(folder, exist_ok=True)
-                    dt = datetime.now().strftime('%Y%m%d-%H%M%S')
-                    file_path = os.path.join(folder, f'screenshot-{dt}.png')
+                    dt = datetime.now().strftime("%Y%m%d-%H%M%S")
+                    file_path = os.path.join(folder, f"screenshot-{dt}.png")
                 params = {"action": "take_screenshot"}
                 if file_path:
                     params["filename"] = file_path
                 return MultiStepPlan(
-                    steps=[PlanStep(
-                        action="screen_control",
-                        params=params,
-                        description=f"Take a screenshot and save to {file_path or 'default location'}",
-                        required_tools=["screen_control"]
-                    )],
+                    steps=[
+                        PlanStep(
+                            action="screen_control",
+                            params=params,
+                            description=f"Take a screenshot and save to {file_path or 'default location'}",
+                            required_tools=["screen_control"],
+                        )
+                    ],
                     description=f"Take a screenshot and save to {file_path or 'default location'}",
-                    required_tools=["screen_control"]
+                    required_tools=["screen_control"],
                 )
         # 3. Mouse
         mouse_patterns = [
             r"move mouse to (\d+),\s*(\d+)",
             r"click( at)? (\d+),\s*(\d+)",
-            r"حرك الفأرة إلى (\d+),\s*(\d+)", r"انقر في (\d+),\s*(\d+)"
+            r"حرك الفأرة إلى (\d+),\s*(\d+)",
+            r"انقر في (\d+),\s*(\d+)",
         ]
         for pattern in mouse_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
-                if 'move' in pattern or 'حرك' in pattern:
+                if "move" in pattern or "حرك" in pattern:
                     x, y = match.groups()[-2:]
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="mouse",
-                            params={"action": "move", "x": int(x), "y": int(y)},
-                            description=f"Move mouse to {x},{y}",
-                            required_tools=["mouse"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="mouse",
+                                params={"action": "move", "x": int(x), "y": int(y)},
+                                description=f"Move mouse to {x},{y}",
+                                required_tools=["mouse"],
+                            )
+                        ],
                         description=f"Move mouse to {x},{y}",
-                        required_tools=["mouse"]
+                        required_tools=["mouse"],
                     )
-                elif 'click' in pattern or 'انقر' in pattern:
+                elif "click" in pattern or "انقر" in pattern:
                     x, y = match.groups()[-2:]
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="mouse",
-                            params={"action": "click", "x": int(x), "y": int(y)},
-                            description=f"Click at {x},{y}",
-                            required_tools=["mouse"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="mouse",
+                                params={"action": "click", "x": int(x), "y": int(y)},
+                                description=f"Click at {x},{y}",
+                                required_tools=["mouse"],
+                            )
+                        ],
                         description=f"Click at {x},{y}",
-                        required_tools=["mouse"]
+                        required_tools=["mouse"],
                     )
         # 4. Keyboard
         keyboard_patterns = [
             r"type ['\"](.+?)['\"]",
             r"press key ['\"]?(\w+)['\"]?",
-            r"اكتب ['\"](.+?)['\"]", r"اضغط (زر|مفتاح) ['\"]?(\w+)['\"]?"
+            r"اكتب ['\"](.+?)['\"]",
+            r"اضغط (زر|مفتاح) ['\"]?(\w+)['\"]?",
         ]
         for pattern in keyboard_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
-                if 'type' in pattern or 'اكتب' in pattern:
+                if "type" in pattern or "اكتب" in pattern:
                     text = match.groups()[-1]
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="keyboard_input",
-                            params={"action": "type", "text": text},
-                            description=f"Type '{text}'",
-                            required_tools=["keyboard_input"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="keyboard_input",
+                                params={"action": "type", "text": text},
+                                description=f"Type '{text}'",
+                                required_tools=["keyboard_input"],
+                            )
+                        ],
                         description=f"Type '{text}'",
-                        required_tools=["keyboard_input"]
+                        required_tools=["keyboard_input"],
                     )
-                elif 'press' in pattern or 'اضغط' in pattern:
+                elif "press" in pattern or "اضغط" in pattern:
                     key = match.groups()[-1]
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="keyboard_input",
-                            params={"action": "press", "key": key},
-                            description=f"Press key '{key}'",
-                            required_tools=["keyboard_input"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="keyboard_input",
+                                params={"action": "press", "key": key},
+                                description=f"Press key '{key}'",
+                                required_tools=["keyboard_input"],
+                            )
+                        ],
                         description=f"Press key '{key}'",
-                        required_tools=["keyboard_input"]
+                        required_tools=["keyboard_input"],
                     )
         # 5. Clipboard
         clipboard_patterns = [
-            r"copy (.+)", r"paste", r"what is on my clipboard",
-            r"ما الموجود في الحافظة", r"انسخ (.+)", r"ألصق"
+            r"copy (.+)",
+            r"paste",
+            r"what is on my clipboard",
+            r"ما الموجود في الحافظة",
+            r"انسخ (.+)",
+            r"ألصق",
         ]
         for pattern in clipboard_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
-                if 'copy' in pattern or 'انسخ' in pattern:
-                    text = match.groups()[-1] if match.groups() else ''
+                if "copy" in pattern or "انسخ" in pattern:
+                    text = match.groups()[-1] if match.groups() else ""
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="clipboard_tool",
-                            params={"action": "copy", "text": text},
-                            description=f"Copy '{text}' to clipboard",
-                            required_tools=["clipboard_tool"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="clipboard_tool",
+                                params={"action": "copy", "text": text},
+                                description=f"Copy '{text}' to clipboard",
+                                required_tools=["clipboard_tool"],
+                            )
+                        ],
                         description=f"Copy '{text}' to clipboard",
-                        required_tools=["clipboard_tool"]
+                        required_tools=["clipboard_tool"],
                     )
-                elif 'paste' in pattern or 'ألصق' in pattern:
+                elif "paste" in pattern or "ألصق" in pattern:
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="clipboard_tool",
-                            params={"action": "paste"},
-                            description="Paste clipboard content",
-                            required_tools=["clipboard_tool"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="clipboard_tool",
+                                params={"action": "paste"},
+                                description="Paste clipboard content",
+                                required_tools=["clipboard_tool"],
+                            )
+                        ],
                         description="Paste clipboard content",
-                        required_tools=["clipboard_tool"]
+                        required_tools=["clipboard_tool"],
                     )
                 else:
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="clipboard_tool",
-                            params={"action": "get_clipboard"},
-                            description="Get clipboard content",
-                            required_tools=["clipboard_tool"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="clipboard_tool",
+                                params={"action": "get_clipboard"},
+                                description="Get clipboard content",
+                                required_tools=["clipboard_tool"],
+                            )
+                        ],
                         description="Get clipboard content",
-                        required_tools=["clipboard_tool"]
+                        required_tools=["clipboard_tool"],
                     )
         # 6. File/Folder (file creation logic, English & Arabic)
         file_create_patterns = [
@@ -432,59 +488,59 @@ class OllamaLLMPlanner(LLMPlanner):
             r"ابي ملف ([^ ]+) فيه ['\"]?([^'\"]+)['\"]?",
             r"خلي ملف ([^ ]+) يحتوي على ['\"]?([^'\"]+)['\"]?",
             r"اكتب في ملف ([^ ]+) النص ['\"]?([^'\"]+)['\"]?",
-            r"جهز لي ملف ([^ ]+) واكتب فيه ['\"]?([^'\"]+)['\"]?"
+            r"جهز لي ملف ([^ ]+) واكتب فيه ['\"]?([^'\"]+)['\"]?",
         ]
         for pattern in file_create_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
                 # English patterns
-                if 'create' in pattern or 'write' in pattern:
-                    if 'and write' in pattern or 'with content' in pattern:
+                if "create" in pattern or "write" in pattern:
+                    if "and write" in pattern or "with content" in pattern:
                         filename = match.group(3)
                         directory = match.group(5) if match.lastindex >= 5 else None
                         content = match.group(7)
-                    elif 'to' in pattern:
+                    elif "to" in pattern:
                         content = match.group(1)
                         filename = match.group(4)
                         directory = match.group(6) if match.lastindex >= 6 else None
                     else:
                         filename = match.group(3)
                         directory = match.group(5) if match.lastindex >= 5 else None
-                        content = match.group(7) if match.lastindex >= 7 else ''
+                        content = match.group(7) if match.lastindex >= 7 else ""
                 # Arabic patterns
-                elif 'اكتب ملف اسمه' in pattern:
+                elif "اكتب ملف اسمه" in pattern:
                     filename = match.group(1)
                     directory = match.group(2)
                     content = match.group(3)
-                elif 'انشئ ملف باسم' in pattern:
+                elif "انشئ ملف باسم" in pattern:
                     filename = match.group(1)
                     directory = match.group(2)
                     content = match.group(3)
-                elif 'إنشاء ملف' in pattern:
+                elif "إنشاء ملف" in pattern:
                     filename = match.group(1)
                     directory = None
                     content = match.group(2)
-                elif 'اكتب' in pattern and 'في ملف' in pattern:
+                elif "اكتب" in pattern and "في ملف" in pattern:
                     content = match.group(1)
                     filename = match.group(2)
                     directory = None
-                elif 'سوي لي ملف اسمه' in pattern:
+                elif "سوي لي ملف اسمه" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
-                elif 'ابي ملف' in pattern:
+                elif "ابي ملف" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
-                elif 'خلي ملف' in pattern:
+                elif "خلي ملف" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
-                elif 'اكتب في ملف' in pattern:
+                elif "اكتب في ملف" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
-                elif 'جهز لي ملف' in pattern:
+                elif "جهز لي ملف" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
@@ -495,52 +551,64 @@ class OllamaLLMPlanner(LLMPlanner):
                     directory = self.main_folder
                 path = f"{directory.rstrip('/')}/{filename}"
                 return MultiStepPlan(
-                    steps=[PlanStep(
-                        action="file",
-                        params={"action": "create_file", "path": path, "content": content},
-                        description=f"Create file {path} with content",
-                        required_tools=["file"]
-                    )],
+                    steps=[
+                        PlanStep(
+                            action="file",
+                            params={"action": "create_file", "path": path, "content": content},
+                            description=f"Create file {path} with content",
+                            required_tools=["file"],
+                        )
+                    ],
                     description=f"Create file {path} with content",
-                    required_tools=["file"]
+                    required_tools=["file"],
                 )
         # Last-chance fallback for file creation (Arabic/English)
-        if ("ملف" in command or "file" in command) and ("اكتب" in command or "write" in command or "حط" in command or "ضع" in command or "contains" in command):
+        if ("ملف" in command or "file" in command) and (
+            "اكتب" in command
+            or "write" in command
+            or "حط" in command
+            or "ضع" in command
+            or "contains" in command
+        ):
             # Try to extract filename and content
             filename_match = re.search(r"ملف(?: اسمه)? ([^ ]+)", command)
             if not filename_match:
                 filename_match = re.search(r"file(?: called| named)? ([^ ]+)", command)
-            content_match = re.search(r"(?:اكتب|حط|ضع|contains|with content|and write) ['\"]?([^'\"]+)['\"]?", command)
+            content_match = re.search(
+                r"(?:اكتب|حط|ضع|contains|with content|and write) ['\"]?([^'\"]+)['\"]?", command
+            )
             filename = filename_match.group(1) if filename_match else "untitled.txt"
             content = content_match.group(1) if content_match else ""
             path = f"{self.main_folder.rstrip('/')}/{filename}"
             return MultiStepPlan(
-                steps=[PlanStep(
-                    action="file",
-                    params={"action": "create_file", "path": path, "content": content},
-                    description=f"Create file {path} with content (fallback)",
-                    required_tools=["file"]
-                )],
+                steps=[
+                    PlanStep(
+                        action="file",
+                        params={"action": "create_file", "path": path, "content": content},
+                        description=f"Create file {path} with content (fallback)",
+                        required_tools=["file"],
+                    )
+                ],
                 description=f"Create file {path} with content (fallback)",
-                required_tools=["file"]
+                required_tools=["file"],
             )
         # 7. Calculator
-        calculator_patterns = [
-            r"calculate (.+)", r"what is (.+)", r"احسب (.+)"
-        ]
+        calculator_patterns = [r"calculate (.+)", r"what is (.+)", r"احسب (.+)"]
         for pattern in calculator_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
                 expr = match.groups()[-1]
                 return MultiStepPlan(
-                    steps=[PlanStep(
-                        action="calculator",
-                        params={"action": "eval", "expression": expr},
-                        description=f"Calculate '{expr}'",
-                        required_tools=["calculator"]
-                    )],
+                    steps=[
+                        PlanStep(
+                            action="calculator",
+                            params={"action": "eval", "expression": expr},
+                            description=f"Calculate '{expr}'",
+                            required_tools=["calculator"],
+                        )
+                    ],
                     description=f"Calculate '{expr}'",
-                    required_tools=["calculator"]
+                    required_tools=["calculator"],
                 )
         # 8. Ollama/LLM fallback
         # If no other tool matches, pass to ollama planner
@@ -553,14 +621,16 @@ class OllamaLLMPlanner(LLMPlanner):
             if "action" not in params:
                 params["action"] = plan_dict["action"]
             return MultiStepPlan(
-                steps=[PlanStep(
-                    action=plan_dict["tool"],
-                    params=params,
-                    description=f"Execute {plan_dict['tool']} with {params}",
-                    required_tools=[plan_dict["tool"]]
-                )],
+                steps=[
+                    PlanStep(
+                        action=plan_dict["tool"],
+                        params=params,
+                        description=f"Execute {plan_dict['tool']} with {params}",
+                        required_tools=[plan_dict["tool"]],
+                    )
+                ],
                 description=f"Execute {plan_dict['tool']} with {params}",
-                required_tools=[plan_dict["tool"]]
+                required_tools=[plan_dict["tool"]],
             )
         else:
             raise ValueError("Planner did not return a valid plan or tool dict.")
@@ -568,13 +638,17 @@ class OllamaLLMPlanner(LLMPlanner):
     async def execute(self, plan: MultiStepPlan) -> Any:
         """Execute a plan and return the result."""
         return await self._execute_plan(plan)
-    
+
     async def _execute_plan(self, plan: MultiStepPlan) -> Any:
         """Execute a multi-step plan."""
         results = []
         for step in plan.steps:
             # Skip step if condition is not met
-            if hasattr(step, 'condition') and step.condition and not step.condition(self.memory.context):
+            if (
+                hasattr(step, "condition")
+                and step.condition
+                and not step.condition(self.memory.context)
+            ):
                 continue
             result = await self.execute_tool(step.action, step.params)
             results.append(result)
@@ -583,24 +657,25 @@ class OllamaLLMPlanner(LLMPlanner):
     async def execute_tool(self, tool_name: str, params: Dict[str, Any]) -> Any:
         """Execute a tool by name using the shared ToolRegistry."""
         from labeeb.core.ai.tools.tool_registry import ToolRegistry
+
         tool_class = ToolRegistry.get_tool(tool_name)
         if not tool_class:
             raise ValueError(f"Tool {tool_name} not found in registry")
         tool = tool_class()
         # Prefer async forward or _execute_command if available
-        if hasattr(tool, 'forward') and callable(getattr(tool, 'forward')):
+        if hasattr(tool, "forward") and callable(getattr(tool, "forward")):
             return await tool.forward(**params)
-        elif hasattr(tool, '_execute_command') and callable(getattr(tool, '_execute_command')):
-            action = params.get('action', None)
+        elif hasattr(tool, "_execute_command") and callable(getattr(tool, "_execute_command")):
+            action = params.get("action", None)
             args = params.copy()
             if action:
-                args.pop('action')
+                args.pop("action")
             return await tool._execute_command(action, args)
-        elif hasattr(tool, 'execute') and callable(getattr(tool, 'execute')):
-            action = params.get('action', None)
+        elif hasattr(tool, "execute") and callable(getattr(tool, "execute")):
+            action = params.get("action", None)
             args = params.copy()
             if action:
-                args.pop('action')
+                args.pop("action")
             return await tool.execute(action, **args)
         else:
             raise TypeError(f"Tool {tool_name} does not support execution interface")
@@ -621,17 +696,19 @@ class OllamaLLMPlanner(LLMPlanner):
                 "steps": self.memory.steps,
                 "context": self.memory.context,
                 "created_at": self.memory.created_at,
-                "updated_at": self.memory.updated_at
+                "updated_at": self.memory.updated_at,
             },
-            "tools": self.tools.list_tools()
+            "tools": self.tools.list_tools(),
         }
 
     def clear_memory(self):
         """Clear agent memory."""
         self.memory.clear()
 
+
 class LabeebAgent(BaseAgent):
     """Main Labeeb agent class, extends BaseAgent with default tools and configuration."""
+
     def __init__(self):
         super().__init__(name="LabeebAgent")
         self.name = "LabeebAgent"
@@ -669,7 +746,7 @@ class LabeebAgent(BaseAgent):
             r"حلل الشاشة",
             r"اعرض لي وصف الشاشة",
             r"ما الموجود في الصورة ['\"]?([^'\" ]+)['\"]?",
-            r"صف الصورة ['\"]?([^'\" ]+)['\"]?"
+            r"صف الصورة ['\"]?([^'\" ]+)['\"]?",
         ]
         for pattern in vision_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
@@ -677,25 +754,29 @@ class LabeebAgent(BaseAgent):
                 image_path = match.groups()[-1].strip("'\"") if match.groups() else None
                 if image_path and not any(x in image_path for x in ["screen", "الشاشة"]):
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="vision",
-                            params={"action": "analyze_image", "image_path": image_path},
-                            description=f"Analyze image {image_path}",
-                            required_tools=["vision"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="vision",
+                                params={"action": "analyze_image", "image_path": image_path},
+                                description=f"Analyze image {image_path}",
+                                required_tools=["vision"],
+                            )
+                        ],
                         description=f"Analyze image {image_path}",
-                        required_tools=["vision"]
+                        required_tools=["vision"],
                     )
                 else:
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="vision",
-                            params={"action": "analyze_image"},
-                            description="Analyze the current screen",
-                            required_tools=["vision"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="vision",
+                                params={"action": "analyze_image"},
+                                description="Analyze the current screen",
+                                required_tools=["vision"],
+                            )
+                        ],
                         description="Analyze the current screen",
-                        required_tools=["vision"]
+                        required_tools=["vision"],
                     )
         # 2. Screenshot (robust filename/folder extraction)
         screenshot_patterns = [
@@ -705,7 +786,7 @@ class LabeebAgent(BaseAgent):
             r"لقط الشاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?",
             r"صور الشاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?",
             r"خذ لقطة شاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?",
-            r"صوّر الشاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?"
+            r"صوّر الشاشة( و(حفظها|خزنها) في ([^ ]+)( باسم ([^ ]+))?)?",
         ]
         for pattern in screenshot_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
@@ -735,128 +816,150 @@ class LabeebAgent(BaseAgent):
                     file_path = os.path.expanduser(filename)
                 elif folder:
                     os.makedirs(folder, exist_ok=True)
-                    dt = datetime.now().strftime('%Y%m%d-%H%M%S')
-                    file_path = os.path.join(folder, f'screenshot-{dt}.png')
+                    dt = datetime.now().strftime("%Y%m%d-%H%M%S")
+                    file_path = os.path.join(folder, f"screenshot-{dt}.png")
                 params = {"action": "take_screenshot"}
                 if file_path:
                     params["filename"] = file_path
                 return MultiStepPlan(
-                    steps=[PlanStep(
-                        action="screen_control",
-                        params=params,
-                        description=f"Take a screenshot and save to {file_path or 'default location'}",
-                        required_tools=["screen_control"]
-                    )],
+                    steps=[
+                        PlanStep(
+                            action="screen_control",
+                            params=params,
+                            description=f"Take a screenshot and save to {file_path or 'default location'}",
+                            required_tools=["screen_control"],
+                        )
+                    ],
                     description=f"Take a screenshot and save to {file_path or 'default location'}",
-                    required_tools=["screen_control"]
+                    required_tools=["screen_control"],
                 )
         # 3. Mouse
         mouse_patterns = [
             r"move mouse to (\d+),\s*(\d+)",
             r"click( at)? (\d+),\s*(\d+)",
-            r"حرك الفأرة إلى (\d+),\s*(\d+)", r"انقر في (\d+),\s*(\d+)"
+            r"حرك الفأرة إلى (\d+),\s*(\d+)",
+            r"انقر في (\d+),\s*(\d+)",
         ]
         for pattern in mouse_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
-                if 'move' in pattern or 'حرك' in pattern:
+                if "move" in pattern or "حرك" in pattern:
                     x, y = match.groups()[-2:]
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="mouse",
-                            params={"action": "move", "x": int(x), "y": int(y)},
-                            description=f"Move mouse to {x},{y}",
-                            required_tools=["mouse"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="mouse",
+                                params={"action": "move", "x": int(x), "y": int(y)},
+                                description=f"Move mouse to {x},{y}",
+                                required_tools=["mouse"],
+                            )
+                        ],
                         description=f"Move mouse to {x},{y}",
-                        required_tools=["mouse"]
+                        required_tools=["mouse"],
                     )
-                elif 'click' in pattern or 'انقر' in pattern:
+                elif "click" in pattern or "انقر" in pattern:
                     x, y = match.groups()[-2:]
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="mouse",
-                            params={"action": "click", "x": int(x), "y": int(y)},
-                            description=f"Click at {x},{y}",
-                            required_tools=["mouse"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="mouse",
+                                params={"action": "click", "x": int(x), "y": int(y)},
+                                description=f"Click at {x},{y}",
+                                required_tools=["mouse"],
+                            )
+                        ],
                         description=f"Click at {x},{y}",
-                        required_tools=["mouse"]
+                        required_tools=["mouse"],
                     )
         # 4. Keyboard
         keyboard_patterns = [
             r"type ['\"](.+?)['\"]",
             r"press key ['\"]?(\w+)['\"]?",
-            r"اكتب ['\"](.+?)['\"]", r"اضغط (زر|مفتاح) ['\"]?(\w+)['\"]?"
+            r"اكتب ['\"](.+?)['\"]",
+            r"اضغط (زر|مفتاح) ['\"]?(\w+)['\"]?",
         ]
         for pattern in keyboard_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
-                if 'type' in pattern or 'اكتب' in pattern:
+                if "type" in pattern or "اكتب" in pattern:
                     text = match.groups()[-1]
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="keyboard_input",
-                            params={"action": "type", "text": text},
-                            description=f"Type '{text}'",
-                            required_tools=["keyboard_input"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="keyboard_input",
+                                params={"action": "type", "text": text},
+                                description=f"Type '{text}'",
+                                required_tools=["keyboard_input"],
+                            )
+                        ],
                         description=f"Type '{text}'",
-                        required_tools=["keyboard_input"]
+                        required_tools=["keyboard_input"],
                     )
-                elif 'press' in pattern or 'اضغط' in pattern:
+                elif "press" in pattern or "اضغط" in pattern:
                     key = match.groups()[-1]
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="keyboard_input",
-                            params={"action": "press", "key": key},
-                            description=f"Press key '{key}'",
-                            required_tools=["keyboard_input"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="keyboard_input",
+                                params={"action": "press", "key": key},
+                                description=f"Press key '{key}'",
+                                required_tools=["keyboard_input"],
+                            )
+                        ],
                         description=f"Press key '{key}'",
-                        required_tools=["keyboard_input"]
+                        required_tools=["keyboard_input"],
                     )
         # 5. Clipboard
         clipboard_patterns = [
-            r"copy (.+)", r"paste", r"what is on my clipboard",
-            r"ما الموجود في الحافظة", r"انسخ (.+)", r"ألصق"
+            r"copy (.+)",
+            r"paste",
+            r"what is on my clipboard",
+            r"ما الموجود في الحافظة",
+            r"انسخ (.+)",
+            r"ألصق",
         ]
         for pattern in clipboard_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
-                if 'copy' in pattern or 'انسخ' in pattern:
-                    text = match.groups()[-1] if match.groups() else ''
+                if "copy" in pattern or "انسخ" in pattern:
+                    text = match.groups()[-1] if match.groups() else ""
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="clipboard_tool",
-                            params={"action": "copy", "text": text},
-                            description=f"Copy '{text}' to clipboard",
-                            required_tools=["clipboard_tool"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="clipboard_tool",
+                                params={"action": "copy", "text": text},
+                                description=f"Copy '{text}' to clipboard",
+                                required_tools=["clipboard_tool"],
+                            )
+                        ],
                         description=f"Copy '{text}' to clipboard",
-                        required_tools=["clipboard_tool"]
+                        required_tools=["clipboard_tool"],
                     )
-                elif 'paste' in pattern or 'ألصق' in pattern:
+                elif "paste" in pattern or "ألصق" in pattern:
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="clipboard_tool",
-                            params={"action": "paste"},
-                            description="Paste clipboard content",
-                            required_tools=["clipboard_tool"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="clipboard_tool",
+                                params={"action": "paste"},
+                                description="Paste clipboard content",
+                                required_tools=["clipboard_tool"],
+                            )
+                        ],
                         description="Paste clipboard content",
-                        required_tools=["clipboard_tool"]
+                        required_tools=["clipboard_tool"],
                     )
                 else:
                     return MultiStepPlan(
-                        steps=[PlanStep(
-                            action="clipboard_tool",
-                            params={"action": "get_clipboard"},
-                            description="Get clipboard content",
-                            required_tools=["clipboard_tool"]
-                        )],
+                        steps=[
+                            PlanStep(
+                                action="clipboard_tool",
+                                params={"action": "get_clipboard"},
+                                description="Get clipboard content",
+                                required_tools=["clipboard_tool"],
+                            )
+                        ],
                         description="Get clipboard content",
-                        required_tools=["clipboard_tool"]
+                        required_tools=["clipboard_tool"],
                     )
         # 6. File/Folder (file creation logic, English & Arabic)
         file_create_patterns = [
@@ -873,59 +976,59 @@ class LabeebAgent(BaseAgent):
             r"ابي ملف ([^ ]+) فيه ['\"]?([^'\"]+)['\"]?",
             r"خلي ملف ([^ ]+) يحتوي على ['\"]?([^'\"]+)['\"]?",
             r"اكتب في ملف ([^ ]+) النص ['\"]?([^'\"]+)['\"]?",
-            r"جهز لي ملف ([^ ]+) واكتب فيه ['\"]?([^'\"]+)['\"]?"
+            r"جهز لي ملف ([^ ]+) واكتب فيه ['\"]?([^'\"]+)['\"]?",
         ]
         for pattern in file_create_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
                 # English patterns
-                if 'create' in pattern or 'write' in pattern:
-                    if 'and write' in pattern or 'with content' in pattern:
+                if "create" in pattern or "write" in pattern:
+                    if "and write" in pattern or "with content" in pattern:
                         filename = match.group(3)
                         directory = match.group(5) if match.lastindex >= 5 else None
                         content = match.group(7)
-                    elif 'to' in pattern:
+                    elif "to" in pattern:
                         content = match.group(1)
                         filename = match.group(4)
                         directory = match.group(6) if match.lastindex >= 6 else None
                     else:
                         filename = match.group(3)
                         directory = match.group(5) if match.lastindex >= 5 else None
-                        content = match.group(7) if match.lastindex >= 7 else ''
+                        content = match.group(7) if match.lastindex >= 7 else ""
                 # Arabic patterns
-                elif 'اكتب ملف اسمه' in pattern:
+                elif "اكتب ملف اسمه" in pattern:
                     filename = match.group(1)
                     directory = match.group(2)
                     content = match.group(3)
-                elif 'انشئ ملف باسم' in pattern:
+                elif "انشئ ملف باسم" in pattern:
                     filename = match.group(1)
                     directory = match.group(2)
                     content = match.group(3)
-                elif 'إنشاء ملف' in pattern:
+                elif "إنشاء ملف" in pattern:
                     filename = match.group(1)
                     directory = None
                     content = match.group(2)
-                elif 'اكتب' in pattern and 'في ملف' in pattern:
+                elif "اكتب" in pattern and "في ملف" in pattern:
                     content = match.group(1)
                     filename = match.group(2)
                     directory = None
-                elif 'سوي لي ملف اسمه' in pattern:
+                elif "سوي لي ملف اسمه" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
-                elif 'ابي ملف' in pattern:
+                elif "ابي ملف" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
-                elif 'خلي ملف' in pattern:
+                elif "خلي ملف" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
-                elif 'اكتب في ملف' in pattern:
+                elif "اكتب في ملف" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
-                elif 'جهز لي ملف' in pattern:
+                elif "جهز لي ملف" in pattern:
                     filename = match.group(1)
                     content = match.group(2)
                     directory = None
@@ -936,52 +1039,64 @@ class LabeebAgent(BaseAgent):
                     directory = self.main_folder
                 path = f"{directory.rstrip('/')}/{filename}"
                 return MultiStepPlan(
-                    steps=[PlanStep(
-                        action="file",
-                        params={"action": "create_file", "path": path, "content": content},
-                        description=f"Create file {path} with content",
-                        required_tools=["file"]
-                    )],
+                    steps=[
+                        PlanStep(
+                            action="file",
+                            params={"action": "create_file", "path": path, "content": content},
+                            description=f"Create file {path} with content",
+                            required_tools=["file"],
+                        )
+                    ],
                     description=f"Create file {path} with content",
-                    required_tools=["file"]
+                    required_tools=["file"],
                 )
         # Last-chance fallback for file creation (Arabic/English)
-        if ("ملف" in command or "file" in command) and ("اكتب" in command or "write" in command or "حط" in command or "ضع" in command or "contains" in command):
+        if ("ملف" in command or "file" in command) and (
+            "اكتب" in command
+            or "write" in command
+            or "حط" in command
+            or "ضع" in command
+            or "contains" in command
+        ):
             # Try to extract filename and content
             filename_match = re.search(r"ملف(?: اسمه)? ([^ ]+)", command)
             if not filename_match:
                 filename_match = re.search(r"file(?: called| named)? ([^ ]+)", command)
-            content_match = re.search(r"(?:اكتب|حط|ضع|contains|with content|and write) ['\"]?([^'\"]+)['\"]?", command)
+            content_match = re.search(
+                r"(?:اكتب|حط|ضع|contains|with content|and write) ['\"]?([^'\"]+)['\"]?", command
+            )
             filename = filename_match.group(1) if filename_match else "untitled.txt"
             content = content_match.group(1) if content_match else ""
             path = f"{self.main_folder.rstrip('/')}/{filename}"
             return MultiStepPlan(
-                steps=[PlanStep(
-                    action="file",
-                    params={"action": "create_file", "path": path, "content": content},
-                    description=f"Create file {path} with content (fallback)",
-                    required_tools=["file"]
-                )],
+                steps=[
+                    PlanStep(
+                        action="file",
+                        params={"action": "create_file", "path": path, "content": content},
+                        description=f"Create file {path} with content (fallback)",
+                        required_tools=["file"],
+                    )
+                ],
                 description=f"Create file {path} with content (fallback)",
-                required_tools=["file"]
+                required_tools=["file"],
             )
         # 7. Calculator
-        calculator_patterns = [
-            r"calculate (.+)", r"what is (.+)", r"احسب (.+)"
-        ]
+        calculator_patterns = [r"calculate (.+)", r"what is (.+)", r"احسب (.+)"]
         for pattern in calculator_patterns:
             match = re.search(pattern, command, re.IGNORECASE)
             if match:
                 expr = match.groups()[-1]
                 return MultiStepPlan(
-                    steps=[PlanStep(
-                        action="calculator",
-                        params={"action": "eval", "expression": expr},
-                        description=f"Calculate '{expr}'",
-                        required_tools=["calculator"]
-                    )],
+                    steps=[
+                        PlanStep(
+                            action="calculator",
+                            params={"action": "eval", "expression": expr},
+                            description=f"Calculate '{expr}'",
+                            required_tools=["calculator"],
+                        )
+                    ],
                     description=f"Calculate '{expr}'",
-                    required_tools=["calculator"]
+                    required_tools=["calculator"],
                 )
         # 8. Ollama/LLM fallback
         # If no other tool matches, pass to ollama planner
@@ -994,14 +1109,16 @@ class LabeebAgent(BaseAgent):
             if "action" not in params:
                 params["action"] = plan_dict["action"]
             return MultiStepPlan(
-                steps=[PlanStep(
-                    action=plan_dict["tool"],
-                    params=params,
-                    description=f"Execute {plan_dict['tool']} with {params}",
-                    required_tools=[plan_dict["tool"]]
-                )],
+                steps=[
+                    PlanStep(
+                        action=plan_dict["tool"],
+                        params=params,
+                        description=f"Execute {plan_dict['tool']} with {params}",
+                        required_tools=[plan_dict["tool"]],
+                    )
+                ],
                 description=f"Execute {plan_dict['tool']} with {params}",
-                required_tools=[plan_dict["tool"]]
+                required_tools=[plan_dict["tool"]],
             )
         else:
             raise ValueError("Planner did not return a valid plan or tool dict.")
@@ -1017,7 +1134,11 @@ class LabeebAgent(BaseAgent):
         results = []
         for step in plan.steps:
             # Skip step if condition is not met
-            if hasattr(step, 'condition') and step.condition and not step.condition(self.memory.context):
+            if (
+                hasattr(step, "condition")
+                and step.condition
+                and not step.condition(self.memory.context)
+            ):
                 continue
             result = await self.execute_tool(step.action, step.params)
             results.append(result)
@@ -1026,24 +1147,25 @@ class LabeebAgent(BaseAgent):
     async def execute_tool(self, tool_name: str, params: Dict[str, Any]) -> Any:
         """Execute a tool by name using the shared ToolRegistry."""
         from labeeb.core.ai.tools.tool_registry import ToolRegistry
+
         tool_class = ToolRegistry.get_tool(tool_name)
         if not tool_class:
             raise ValueError(f"Tool {tool_name} not found in registry")
         tool = tool_class()
         # Prefer async forward or _execute_command if available
-        if hasattr(tool, 'forward') and callable(getattr(tool, 'forward')):
+        if hasattr(tool, "forward") and callable(getattr(tool, "forward")):
             return await tool.forward(**params)
-        elif hasattr(tool, '_execute_command') and callable(getattr(tool, '_execute_command')):
-            action = params.get('action', None)
+        elif hasattr(tool, "_execute_command") and callable(getattr(tool, "_execute_command")):
+            action = params.get("action", None)
             args = params.copy()
             if action:
-                args.pop('action')
+                args.pop("action")
             return await tool._execute_command(action, args)
-        elif hasattr(tool, 'execute') and callable(getattr(tool, 'execute')):
-            action = params.get('action', None)
+        elif hasattr(tool, "execute") and callable(getattr(tool, "execute")):
+            action = params.get("action", None)
             args = params.copy()
             if action:
-                args.pop('action')
+                args.pop("action")
             return await tool.execute(action, **args)
         else:
             raise TypeError(f"Tool {tool_name} does not support execution interface")
@@ -1064,14 +1186,15 @@ class LabeebAgent(BaseAgent):
                 "steps": self.memory.steps,
                 "context": self.memory.context,
                 "created_at": self.memory.created_at,
-                "updated_at": self.memory.updated_at
+                "updated_at": self.memory.updated_at,
             },
-            "tools": self.tools.list_tools()
+            "tools": self.tools.list_tools(),
         }
 
     def clear_memory(self):
         """Clear agent memory."""
         self.memory.clear()
+
 
 __all__ = [
     "LabeebAgent",
@@ -1081,7 +1204,7 @@ __all__ = [
     "PlanStep",
     "MultiStepPlan",
     "LLMPlanner",
-    "OllamaLLMPlanner"
+    "OllamaLLMPlanner",
 ]
 
 # Minimal test agent usage
@@ -1092,4 +1215,4 @@ if __name__ == "__main__":
     print(f"Result: {result}")
     print("\nAgent memory steps:")
     for step in agent.get_state()["memory"]["steps"]:
-        print(step) 
+        print(step)

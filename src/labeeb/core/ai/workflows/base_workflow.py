@@ -4,28 +4,31 @@ from smolagents import Tool
 from typing import Any, Dict, List
 from dataclasses import dataclass
 
+
 @dataclass
 class Workflow:
     name: str = ""
     description: str = ""
     steps: List[Dict[str, Any]] = None
     tools: List[Tool] = None
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+
 @dataclass
 class LabeebWorkflow(Workflow):
     """Base workflow implementation for Labeeb."""
-    
+
     name: str
     description: str
     steps: List[Dict[str, Any]]
     tools: List[Tool]
-    
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
     async def execute(self, context: Dict[str, Any]) -> Any:
         """Execute the workflow with the given context."""
         results = []
@@ -36,11 +39,11 @@ class LabeebWorkflow(Workflow):
             result = await tool.execute(step["params"])
             results.append(result)
         return results
-        
+
     def validate(self) -> bool:
         """Validate the workflow configuration."""
         return all("tool" in step and "params" in step for step in self.steps)
-        
+
     def get_help(self) -> str:
         """Get help text for the workflow."""
-        return f"{self.name}: {self.description}\nSteps: {self.steps}" 
+        return f"{self.name}: {self.description}\nSteps: {self.steps}"

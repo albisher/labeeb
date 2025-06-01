@@ -21,7 +21,10 @@ Key features:
 See also: src/labeeb/core/tools/json_tools.py for the current implementation
 """
 
-warnings.warn("ai_json_tools.py is deprecated. Use JSONTool from src/labeeb/core/tools/json_tools.py instead.")
+warnings.warn(
+    "ai_json_tools.py is deprecated. Use JSONTool from src/labeeb/core/tools/json_tools.py instead."
+)
+
 
 def process_ai_json_output(ai_json_str):
     """
@@ -46,6 +49,7 @@ def process_ai_json_output(ai_json_str):
         print(f"Error processing AI JSON output: {e}")
         return None
 
+
 def build_ai_prompt(user_input, prompt_template_path=None):
     """
     Build the AI prompt by inserting user input into the app's template prompt.
@@ -57,4 +61,4 @@ def build_ai_prompt(user_input, prompt_template_path=None):
         template = f.read()
     # Replace placeholder with user input
     prompt = template.replace("{user_input}", user_input)
-    return prompt 
+    return prompt

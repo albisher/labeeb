@@ -16,6 +16,7 @@ See also: core/shell_handler.py for the target file being modified
 """
 import os
 
+
 def get_fixed_method():
     """Returns the fixed implementation of find_files"""
     return '''def find_files(self, file_name, location="~", max_results=20, include_metadata=True):
@@ -90,12 +91,13 @@ def get_fixed_method():
         except Exception as e:
             return f"Error searching for files: {str(e)}"'''
 
+
 def main():
     """Main entry point"""
     # Read the shell_handler.py file
-    with open('core/shell_handler.py', 'r') as f:
+    with open("core/shell_handler.py", "r") as f:
         content = f.readlines()
-        
+
     # Find the start of the find_files method
     start_line = -1
     end_line = -1
@@ -103,11 +105,11 @@ def main():
         if "def find_files(" in line:
             start_line = i
             break
-            
+
     if start_line == -1:
         print("Could not find find_files method in shell_handler.py!")
         return
-        
+
     # Find the end of the method - look for the next method or class definition
     for i in range(start_line + 1, len(content)):
         if "def " in content[i] and "(" in content[i]:
@@ -116,35 +118,38 @@ def main():
         if "class " in content[i] and ":" in content[i]:
             end_line = i
             break
-            
+
     if end_line == -1:
         end_line = len(content)  # Assume it's the last method in the file
-        
+
     # Get the content before and after the method
     content_before = content[:start_line]
     content_after = content[end_line:]
-    
+
     # Create new content with updated method
-    fixed_method = get_fixed_method().split('\n')
-    fixed_method = [line + '\n' for line in fixed_method]
-    
+    fixed_method = get_fixed_method().split("\n")
+    fixed_method = [line + "\n" for line in fixed_method]
+
     new_content = content_before + fixed_method + content_after
-    
+
     # Backup the original file
-    backup_file = 'core/shell_handler.py.bak_files'
+    backup_file = "core/shell_handler.py.bak_files"
     i = 1
     while os.path.exists(backup_file):
-        backup_file = f'core/shell_handler.py.bak_files{i}'
+        backup_file = f"core/shell_handler.py.bak_files{i}"
         i += 1
-        
-    with open(backup_file, 'w') as f:
+
+    with open(backup_file, "w") as f:
         f.writelines(content)
-        
+
     # Write the updated file
-    with open('core/shell_handler.py', 'w') as f:
+    with open("core/shell_handler.py", "w") as f:
         f.writelines(new_content)
-        
-    print(f"Successfully updated find_files in shell_handler.py (original backed up to {backup_file})")
+
+    print(
+        f"Successfully updated find_files in shell_handler.py (original backed up to {backup_file})"
+    )
+
 
 if __name__ == "__main__":
     main()

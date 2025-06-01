@@ -24,6 +24,7 @@ from labeeb.core.platform_core.platform_utils import get_platform_name
 try:
     import pyautogui
     from pyautogui import Point, FAILSAFE
+
     FAILSAFE = True  # Enable PyAutoGUI's failsafe
 except ImportError:
     logging.error("PyAutoGUI not installed. Mouse control will be limited.")
@@ -33,49 +34,49 @@ logger = logging.getLogger(__name__)
 
 OS_NAME = get_platform_name()
 
+
 @dataclass
 class MouseState:
     """Represents the current state of the mouse."""
+
     position: Tuple[int, int]
     is_pressed: bool
     last_action: str
     last_action_time: float
 
+
 class MouseController:
     """Provides comprehensive mouse control capabilities."""
-    
+
     def __init__(self):
         """Initialize the mouse controller."""
         self.state = MouseState(
-            position=(0, 0),
-            is_pressed=False,
-            last_action="",
-            last_action_time=time.time()
+            position=(0, 0), is_pressed=False, last_action="", last_action_time=time.time()
         )
         self._validate_environment()
-    
+
     def _validate_environment(self) -> None:
         """Validate that the environment is properly set up."""
         if pyautogui is None:
             raise RuntimeError("PyAutoGUI is required for mouse control")
-    
+
     def _get_screen_size(self) -> Tuple[int, int]:
         """Get the screen dimensions."""
         return pyautogui.size()
-    
+
     def _validate_coordinates(self, x: int, y: int) -> bool:
         """Validate that coordinates are within screen bounds."""
         width, height = self._get_screen_size()
         return 0 <= x < width and 0 <= y < height
-    
+
     def move_to(self, x: int, y: int, duration: float = 0.0) -> bool:
         """Move the mouse to absolute coordinates.
-        
+
         Args:
             x: X coordinate
             y: Y coordinate
             duration: Movement duration in seconds
-            
+
         Returns:
             bool: True if movement was successful
         """
@@ -83,7 +84,7 @@ class MouseController:
             if not self._validate_coordinates(x, y):
                 logger.error(f"Invalid coordinates: ({x}, {y})")
                 return False
-            
+
             pyautogui.moveTo(x, y, duration=duration)
             self.state.position = (x, y)
             self.state.last_action = "move"
@@ -92,26 +93,26 @@ class MouseController:
         except Exception as e:
             logger.error(f"Error moving mouse: {e}")
             return False
-    
+
     def move_relative(self, dx: int, dy: int, duration: float = 0.0) -> bool:
         """Move the mouse relative to current position.
-        
+
         Args:
             dx: X distance to move
             dy: Y distance to move
             duration: Movement duration in seconds
-            
+
         Returns:
             bool: True if movement was successful
         """
         try:
             current_x, current_y = self.state.position
             new_x, new_y = current_x + dx, current_y + dy
-            
+
             if not self._validate_coordinates(new_x, new_y):
                 logger.error(f"Invalid relative movement: ({dx}, {dy})")
                 return False
-            
+
             pyautogui.moveRel(dx, dy, duration=duration)
             self.state.position = (new_x, new_y)
             self.state.last_action = "move_relative"
@@ -120,14 +121,14 @@ class MouseController:
         except Exception as e:
             logger.error(f"Error moving mouse relative: {e}")
             return False
-    
+
     def click(self, button: str = "left", clicks: int = 1) -> bool:
         """Perform a mouse click.
-        
+
         Args:
             button: Mouse button ("left", "right", "middle")
             clicks: Number of clicks
-            
+
         Returns:
             bool: True if click was successful
         """
@@ -139,15 +140,15 @@ class MouseController:
         except Exception as e:
             logger.error(f"Error clicking mouse: {e}")
             return False
-    
+
     def drag_to(self, x: int, y: int, duration: float = 0.0) -> bool:
         """Drag the mouse to coordinates.
-        
+
         Args:
             x: Target X coordinate
             y: Target Y coordinate
             duration: Drag duration in seconds
-            
+
         Returns:
             bool: True if drag was successful
         """
@@ -155,7 +156,7 @@ class MouseController:
             if not self._validate_coordinates(x, y):
                 logger.error(f"Invalid drag coordinates: ({x}, {y})")
                 return False
-            
+
             pyautogui.dragTo(x, y, duration=duration)
             self.state.position = (x, y)
             self.state.last_action = "drag"
@@ -164,14 +165,14 @@ class MouseController:
         except Exception as e:
             logger.error(f"Error dragging mouse: {e}")
             return False
-    
+
     def scroll(self, clicks: int, direction: str = "vertical") -> bool:
         """Scroll the mouse wheel.
-        
+
         Args:
             clicks: Number of scroll clicks (positive for up/right, negative for down/left)
             direction: Scroll direction ("vertical" or "horizontal")
-            
+
         Returns:
             bool: True if scroll was successful
         """
@@ -180,21 +181,21 @@ class MouseController:
                 pyautogui.hscroll(clicks)
             else:
                 pyautogui.scroll(clicks)
-            
+
             self.state.last_action = f"scroll_{direction}"
             self.state.last_action_time = time.time()
             return True
         except Exception as e:
             logger.error(f"Error scrolling mouse: {e}")
             return False
-    
+
     def draw_gesture(self, points: List[Tuple[int, int]], duration: float = 0.5) -> bool:
         """Draw a gesture with the mouse.
-        
+
         Args:
             points: List of (x, y) coordinates to draw through
             duration: Total duration of the gesture in seconds
-            
+
         Returns:
             bool: True if gesture was successful
         """
@@ -202,29 +203,29 @@ class MouseController:
             if not all(self._validate_coordinates(x, y) for x, y in points):
                 logger.error("Invalid gesture coordinates")
                 return False
-            
+
             # Move to first point
             self.move_to(points[0][0], points[0][1])
-            
+
             # Draw through remaining points
             for x, y in points[1:]:
-                self.drag_to(x, y, duration=duration/len(points))
-            
+                self.drag_to(x, y, duration=duration / len(points))
+
             self.state.last_action = "gesture"
             self.state.last_action_time = time.time()
             return True
         except Exception as e:
             logger.error(f"Error drawing gesture: {e}")
             return False
-    
+
     def draw_circle(self, center: Tuple[int, int], radius: int, duration: float = 1.0) -> bool:
         """Draw a circle with the mouse.
-        
+
         Args:
             center: (x, y) coordinates of circle center
             radius: Circle radius in pixels
             duration: Total duration of the circle drawing
-            
+
         Returns:
             bool: True if circle was drawn successfully
         """
@@ -232,7 +233,7 @@ class MouseController:
             if not self._validate_coordinates(center[0], center[1]):
                 logger.error(f"Invalid circle center: {center}")
                 return False
-            
+
             points = []
             steps = 36  # 10 degrees per step
             for i in range(steps + 1):
@@ -240,20 +241,20 @@ class MouseController:
                 x = center[0] + radius * math.cos(angle)
                 y = center[1] + radius * math.sin(angle)
                 points.append((int(x), int(y)))
-            
+
             return self.draw_gesture(points, duration)
         except Exception as e:
             logger.error(f"Error drawing circle: {e}")
             return False
-    
+
     def draw_square(self, start: Tuple[int, int], size: int, duration: float = 1.0) -> bool:
         """Draw a square with the mouse.
-        
+
         Args:
             start: (x, y) coordinates of top-left corner
             size: Square size in pixels
             duration: Total duration of the square drawing
-            
+
         Returns:
             bool: True if square was drawn successfully
         """
@@ -261,41 +262,43 @@ class MouseController:
             if not self._validate_coordinates(start[0], start[1]):
                 logger.error(f"Invalid square start: {start}")
                 return False
-            
+
             points = [
                 start,
                 (start[0] + size, start[1]),
                 (start[0] + size, start[1] + size),
                 (start[0], start[1] + size),
-                start
+                start,
             ]
-            
+
             return self.draw_gesture(points, duration)
         except Exception as e:
             logger.error(f"Error drawing square: {e}")
             return False
-    
+
     def get_position(self) -> Tuple[int, int]:
         """Get current mouse position.
-        
+
         Returns:
             Tuple[int, int]: Current (x, y) coordinates
         """
         return pyautogui.position()
-    
+
     def is_pressed(self, button: str = "left") -> bool:
         """Check if a mouse button is pressed.
-        
+
         Args:
             button: Mouse button to check ("left", "right", "middle")
-            
+
         Returns:
             bool: True if button is pressed
         """
         return pyautogui.mouseDown(button=button)
 
+
 # Create a singleton instance
 mouse_controller = MouseController()
+
 
 def process_mouse_command(command: str) -> Dict[str, Any]:
     """Process a mouse control command.
@@ -317,6 +320,7 @@ def process_mouse_command(command: str) -> Dict[str, Any]:
         elif "move mouse" in command:
             if "pixels" in command:
                 import re
+
                 match = re.search(r"move mouse ([\d\.]+) pixels? (right|left|up|down)", command)
                 if match:
                     pixels = float(match.group(1))
@@ -383,6 +387,7 @@ def process_mouse_command(command: str) -> Dict[str, Any]:
         elif "move to" in command:
             # e.g. "move to (150, 150)"
             import re
+
             match = re.search(r"move to \((\d+),\s*(\d+)\)", command)
             if match:
                 x, y = int(match.group(1)), int(match.group(2))
@@ -425,7 +430,10 @@ def process_mouse_command(command: str) -> Dict[str, Any]:
         # Drag operations
         elif "drag" in command:
             import re
-            match = re.search(r"drag (?:and hold )?from \((\d+),\s*(\d+)\) to \((\d+),\s*(\d+)\)", command)
+
+            match = re.search(
+                r"drag (?:and hold )?from \((\d+),\s*(\d+)\) to \((\d+),\s*(\d+)\)", command
+            )
             if match:
                 from_x, from_y, to_x, to_y = map(int, match.groups())
                 mouse_controller.move_to(from_x, from_y)
@@ -444,6 +452,7 @@ def process_mouse_command(command: str) -> Dict[str, Any]:
         # Scroll operations
         elif "scroll" in command:
             import re
+
             match = re.search(r"scroll (up|down|left|right)(?: (\d+))?", command)
             if match:
                 direction = match.group(1)
@@ -498,7 +507,9 @@ def process_mouse_command(command: str) -> Dict[str, Any]:
                 center1 = (100, 100)
                 center2 = (150, 100)
                 radius = 25
-                success = mouse_controller.draw_circle(center1, radius) and mouse_controller.draw_circle(center2, radius)
+                success = mouse_controller.draw_circle(
+                    center1, radius
+                ) and mouse_controller.draw_circle(center2, radius)
                 action = "draw_figure_eight"
                 params = {"center1": center1, "center2": center2, "radius": radius}
             else:
@@ -521,11 +532,15 @@ def process_mouse_command(command: str) -> Dict[str, Any]:
             message = "Command not recognized"
         return {
             "status": "success" if success else "error",
-            "message": message if message else ("Command executed successfully" if success else "Invalid command"),
+            "message": (
+                message
+                if message
+                else ("Command executed successfully" if success else "Invalid command")
+            ),
             "position": mouse_controller.get_position(),
             "os": OS_NAME,
             "action": action,
-            "parameters": params
+            "parameters": params,
         }
     except Exception as e:
         logger.error(f"Error processing mouse command: {e}")
@@ -535,5 +550,5 @@ def process_mouse_command(command: str) -> Dict[str, Any]:
             "position": mouse_controller.get_position(),
             "os": OS_NAME,
             "action": None,
-            "parameters": {}
-        } 
+            "parameters": {},
+        }

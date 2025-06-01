@@ -5,6 +5,7 @@ from labeeb.core.ai.mcp_protocol import MCPProtocol
 from labeeb.core.ai.smol_agent import SmolAgentProtocol
 from typing import Dict, Any, Optional
 
+
 class MouseTool(BaseTool, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     name = "mouse"
     description = "Tool for mouse movement and clicking."
@@ -16,7 +17,9 @@ class MouseTool(BaseTool, A2AProtocol, MCPProtocol, SmolAgentProtocol):
         self._channels = {}  # For MCP protocol
         self._capabilities = {}  # For SmolAgent protocol
 
-    async def _execute_command(self, command: str, args: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _execute_command(
+        self, command: str, args: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         args = args or {}
         if command == "move":
             x = args.get("x")
@@ -86,4 +89,4 @@ class MouseTool(BaseTool, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     async def notify_completion(self, action: str, result: Dict[str, Any]) -> None:
         if action in self._capabilities:
             handler = self._capabilities[action]
-            await handler(result) 
+            await handler(result)

@@ -43,8 +43,10 @@ from enum import Enum
 import asyncio
 from .smol_agent import SmolAgent, AgentState, AgentResult
 
+
 class MessageType(Enum):
     """Types of A2A messages."""
+
     REQUEST = "request"
     RESPONSE = "response"
     ERROR = "error"
@@ -53,17 +55,21 @@ class MessageType(Enum):
     STATE_UPDATE = "state_update"
     HEARTBEAT = "heartbeat"
 
+
 class MessageRole(Enum):
     """Roles for A2A messages."""
+
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
     TOOL = "tool"
     ERROR = "error"
 
+
 @dataclass
 class Message:
     """A2A message structure."""
+
     type: MessageType
     sender: str
     receiver: str
@@ -83,11 +89,11 @@ class Message:
             "timestamp": self.timestamp,
             "message_id": self.message_id,
             "correlation_id": self.correlation_id,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Message':
+    def from_dict(cls, data: Dict[str, Any]) -> "Message":
         """Create message from dictionary."""
         return cls(
             type=MessageType(data["type"]),
@@ -97,20 +103,21 @@ class Message:
             timestamp=data["timestamp"],
             message_id=data["message_id"],
             correlation_id=data.get("correlation_id"),
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
         )
+
 
 class A2AProtocol:
     """
     A2A protocol implementation for agent communication.
-    
+
     This class handles:
     - Message routing between agents
     - Tool discovery and sharing
     - State synchronization
     - Error handling and recovery
     """
-    
+
     def __init__(self):
         """Initialize A2A protocol."""
         self.logger = logging.getLogger("A2AProtocol")
@@ -121,26 +128,26 @@ class A2AProtocol:
         self._message_timeout = 30.0  # seconds
         self._retry_count = 3
         self._retry_delay = 1.0  # seconds
-    
+
     def register_handler(self, message_type: MessageType, handler: callable):
         """Register a message handler."""
         self._message_handlers[message_type].append(handler)
-    
+
     def register_tool(self, tool: Any):
         """Register a tool for sharing with other agents."""
         # Tool registration logic here
         pass
-    
+
     async def send_message(self, message: Message) -> Message:
         """
         Send a message and wait for response.
-        
+
         Args:
             message: The message to send
-            
+
         Returns:
             Message: The response message
-            
+
         Raises:
             TimeoutError: If no response received within timeout
             A2AError: If message handling fails
@@ -149,10 +156,10 @@ class A2AProtocol:
             # Create future for response
             future = asyncio.Future()
             self._pending_messages[message.message_id] = future
-            
+
             # Send message
             await self._route_message(message)
-            
+
             # Wait for response with timeout
             try:
                 response = await asyncio.wait_for(future, timeout=self._message_timeout)
@@ -161,25 +168,25 @@ class A2AProtocol:
                 raise TimeoutError(f"No response received for message {message.message_id}")
             finally:
                 self._pending_messages.pop(message.message_id, None)
-                
+
         except Exception as e:
             self.logger.error(f"Error sending message: {str(e)}")
             raise A2AError(f"Failed to send message: {str(e)}")
-    
+
     async def handle_message(self, message: Message) -> Message:
         """
         Handle an incoming message.
-        
+
         Args:
             message: The message to handle
-            
+
         Returns:
             Message: The response message
         """
         try:
             # Get handlers for message type
             handlers = self._message_handlers[message.type]
-            
+
             # Execute handlers
             for handler in handlers:
                 try:
@@ -188,16 +195,16 @@ class A2AProtocol:
                         return response
                 except Exception as e:
                     self.logger.error(f"Handler error: {str(e)}")
-            
+
             # If no handler responded, create error response
             return Message(
                 type=MessageType.ERROR,
                 sender=message.receiver,
                 receiver=message.sender,
                 content={"error": "No handler found for message type"},
-                correlation_id=message.message_id
+                correlation_id=message.message_id,
             )
-            
+
         except Exception as e:
             self.logger.error(f"Error handling message: {str(e)}")
             return Message(
@@ -205,32 +212,38 @@ class A2AProtocol:
                 sender=message.receiver,
                 receiver=message.sender,
                 content={"error": str(e)},
-                correlation_id=message.message_id
+                correlation_id=message.message_id,
             )
-    
+
     async def _route_message(self, message: Message):
         """Route message to appropriate handler."""
         # Message routing logic here
         pass
-    
+
     async def _retry_message(self, message: Message, attempt: int = 0) -> Message:
         """Retry sending a message with exponential backoff."""
         try:
             return await self.send_message(message)
         except (TimeoutError, A2AError) as e:
             if attempt < self._retry_count:
-                await asyncio.sleep(self._retry_delay * (2 ** attempt))
+                await asyncio.sleep(self._retry_delay * (2**attempt))
                 return await self._retry_message(message, attempt + 1)
             raise e
 
+
 class A2AError(Exception):
     """Base class for A2A protocol errors."""
+
     pass
+
 
 class MessageTimeoutError(A2AError):
     """Raised when a message times out."""
+
     pass
+
 
 class MessageHandlerError(A2AError):
     """Raised when a message handler fails."""
-    pass 
+
+    pass

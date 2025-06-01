@@ -4,12 +4,14 @@ from labeeb.core.ai.mcp_protocol import MCPProtocol
 from labeeb.core.ai.smol_agent import SmolAgentProtocol
 from typing import Dict, Any
 
+
 class ResearchEvaluatorAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     """
     Agent that evaluates research quality and checks completeness.
     Reviews outputs and provides feedback or scores.
     Implements A2A, MCP, and SmolAgents protocols for enhanced agent communication.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.a2a_protocol = A2AProtocol()
@@ -31,14 +33,14 @@ class ResearchEvaluatorAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol)
             raw = research_report.get("raw", {})
             score = 0
             feedback = []
-            
+
             # Check for key sections
             for section in ["system", "web_search", "files"]:
                 if section in raw and raw[section]:
                     score += 1
                 else:
                     feedback.append(f"Missing or empty section: {section}")
-            
+
             # Simple quality check
             if len(report) > 100:
                 score += 1
@@ -46,7 +48,7 @@ class ResearchEvaluatorAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol)
                 feedback.append("Report is too short.")
 
             result = {"score": score, "feedback": feedback, "summary": report[:200]}
-            
+
             # Notify SmolAgent protocol after evaluation
             await self.smol_protocol.notify_completion("evaluate", result)
             return result
@@ -75,4 +77,4 @@ class ResearchEvaluatorAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol)
         await self.smol_protocol.register_capability(capability, handler)
 
     async def unregister_capability(self, capability: str) -> None:
-        await self.smol_protocol.unregister_capability(capability) 
+        await self.smol_protocol.unregister_capability(capability)

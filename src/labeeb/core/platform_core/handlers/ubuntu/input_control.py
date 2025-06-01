@@ -5,4 +5,4 @@ on Ubuntu systems. It includes functionality for simulating keyboard events, mou
 and clicks using the appropriate Linux APIs and libraries.
 """
 
-from typing import Dict, Any, Optional, Tuple, List, Union 
+from typing import Dict, Any, Optional, Tuple, List, Union

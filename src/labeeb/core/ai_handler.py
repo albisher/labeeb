@@ -2,6 +2,7 @@
 AI Handler for Labeeb.
 Manages AI model interactions and caching.
 """
+
 from typing import Dict, Any, Optional, List, Union
 import json
 import time
@@ -30,6 +31,7 @@ from labeeb.system_types import SystemInfo
 from labeeb.core.command_processor.ai_command_extractor import AICommandExtractor
 from labeeb.core.platform_core.platform_manager import get_platform_system_info_gatherer
 
+
 @dataclass
 class PromptConfig:
     max_tokens: int = 1024
@@ -37,17 +39,20 @@ class PromptConfig:
     top_p: float = 0.95
     top_k: int = 40
 
+
 @dataclass
 class ResponseInfo:
     text: str
     raw_response: Dict[str, Any]
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+
 class AIHandler:
     """
     Handles Ollama model interactions for Labeeb.
     Provides a unified interface for processing prompts and handling responses from Ollama.
     """
+
     def __init__(self, model_manager: ModelManager) -> None:
         self.model_manager = model_manager
         self.prompt_config = PromptConfig()
@@ -56,21 +61,25 @@ class AIHandler:
 
     def process_prompt(self, prompt: str, extra_context: str = None) -> ResponseInfo:
         try:
-            system_info = self.system_info_gatherer.get_system_info()['platform']
+            system_info = self.system_info_gatherer.get_system_info()["platform"]
             if extra_context:
                 prompt = f"[Visual Context]: {extra_context}\n{prompt}"
             formatted_prompt = self.format_ai_prompt(prompt, system_info)
             logger.debug(f"Formatted AI prompt: {formatted_prompt}")
             response = self._get_model_response(formatted_prompt)
             logger.debug(f"Raw model response: {response}")
-            success, plan, extraction_metadata = self.command_extractor.extract_command(response.get('response', ''))
-            logger.debug(f"Extraction success: {success}, plan: {plan}, metadata: {extraction_metadata}")
+            success, plan, extraction_metadata = self.command_extractor.extract_command(
+                response.get("response", "")
+            )
+            logger.debug(
+                f"Extraction success: {success}, plan: {plan}, metadata: {extraction_metadata}"
+            )
             if not success or not plan:
-                raise AIError(f"Failed to extract valid command from model response: {extraction_metadata.get('error_message')}")
+                raise AIError(
+                    f"Failed to extract valid command from model response: {extraction_metadata.get('error_message')}"
+                )
             return ResponseInfo(
-                text=json.dumps(plan, indent=2),
-                raw_response=response,
-                metadata=extraction_metadata
+                text=json.dumps(plan, indent=2), raw_response=response, metadata=extraction_metadata
             )
         except Exception as e:
             logger.error(f"Error processing prompt: {str(e)}")
@@ -121,6 +130,7 @@ Remember:
     def _get_model_response(self, prompt: str) -> Dict[str, Any]:
         try:
             import ollama
+
             response = ollama.generate(
                 model=self.model_manager.model_info.name,
                 prompt=prompt,
@@ -128,8 +138,8 @@ Remember:
                     "temperature": self.prompt_config.temperature,
                     "top_p": self.prompt_config.top_p,
                     "top_k": self.prompt_config.top_k,
-                    "num_predict": self.prompt_config.max_tokens
-                }
+                    "num_predict": self.prompt_config.max_tokens,
+                },
             )
             return response
         except Exception as e:
@@ -145,15 +155,13 @@ Remember:
                 "model": self.model_manager.model_info.name,
                 "tokens": response.get("total_tokens", 0),
                 "prompt_tokens": response.get("prompt_tokens", 0),
-                "completion_tokens": response.get("completion_tokens", 0)
+                "completion_tokens": response.get("completion_tokens", 0),
             }
-            return {
-                "text": text,
-                "metadata": metadata
-            }
+            return {"text": text, "metadata": metadata}
         except Exception as e:
             logger.error(f"Error processing response: {str(e)}")
             raise
+
 
 def get_system_info() -> SystemInfo:
     """Get system information using the platform-specific gatherer.
@@ -163,4 +171,5 @@ def get_system_info() -> SystemInfo:
     """
     return get_platform_system_info_gatherer().get_system_info()
 
-__all__ = ['get_system_info']
+
+__all__ = ["get_system_info"]

@@ -2,17 +2,20 @@
 WebSocket implementation for Model Context Protocol.
 Provides real-time communication over WebSocket connections using JSON-RPC 2.0.
 """
+
 from typing import Any, Dict, Optional
 import asyncio
 import json
 import websockets
 from ..mcp_protocol import MCPTool, MCPRequest, MCPResponse
 
+
 class WebSocketTool(MCPTool):
     """
     WebSocket tool implementation for MCP.
     Handles real-time communication over WebSocket connections.
     """
+
     def __init__(self, url: str, tool_id: str):
         self.url = url
         self.tool_id = tool_id
@@ -23,19 +26,11 @@ class WebSocketTool(MCPTool):
     async def execute(self, params: Dict[str, Any]) -> MCPResponse:
         """Execute the WebSocket tool with given parameters."""
         if not self.connected or not self.websocket:
-            return MCPResponse(
-                error={
-                    "code": -32000,
-                    "message": "WebSocket not connected"
-                }
-            )
+            return MCPResponse(error={"code": -32000, "message": "WebSocket not connected"})
 
         try:
             # Create MCP request
-            request = MCPRequest(
-                method=self.tool_id,
-                params=params
-            )
+            request = MCPRequest(method=self.tool_id, params=params)
 
             # Send request
             await self.websocket.send(json.dumps(request.to_dict()))
@@ -44,12 +39,7 @@ class WebSocketTool(MCPTool):
             response_data = await self._message_queue.get()
             return MCPResponse.from_dict(response_data)
         except Exception as e:
-            return MCPResponse(
-                error={
-                    "code": -32000,
-                    "message": str(e)
-                }
-            )
+            return MCPResponse(error={"code": -32000, "message": str(e)})
 
     def get_schema(self) -> Dict[str, Any]:
         """Get the WebSocket tool's schema."""
@@ -58,14 +48,9 @@ class WebSocketTool(MCPTool):
             "description": "WebSocket communication tool",
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string",
-                        "description": "Message to send"
-                    }
-                },
-                "required": ["message"]
-            }
+                "properties": {"message": {"type": "string", "description": "Message to send"}},
+                "required": ["message"],
+            },
         }
 
     async def connect(self) -> bool:
@@ -105,4 +90,4 @@ class WebSocketTool(MCPTool):
                 break
             except Exception as e:
                 print(f"Error in WebSocket receive loop: {e}")
-                await asyncio.sleep(1)  # Prevent busy waiting on error 
+                await asyncio.sleep(1)  # Prevent busy waiting on error

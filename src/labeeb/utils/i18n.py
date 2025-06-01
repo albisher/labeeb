@@ -13,9 +13,10 @@ import gettext
 from typing import Optional, Dict, Any
 from pathlib import Path
 
+
 class I18nManager:
     """Manages internationalization for the Labeeb platform.
-    
+
     This class handles:
     - Translation loading and caching
     - Language switching
@@ -25,7 +26,7 @@ class I18nManager:
 
     def __init__(self, domain: str = "labeeb", locale_dir: str = "locales"):
         """Initialize the i18n manager.
-        
+
         Args:
             domain: The translation domain name
             locale_dir: Directory containing translation files
@@ -47,9 +48,7 @@ class I18nManager:
 
             try:
                 translation = gettext.translation(
-                    self.domain,
-                    localedir=str(self.locale_dir),
-                    languages=[lang_dir.name]
+                    self.domain, localedir=str(self.locale_dir), languages=[lang_dir.name]
                 )
                 self.translations[lang_dir.name] = translation
             except Exception as e:
@@ -57,22 +56,22 @@ class I18nManager:
 
     def set_language(self, language: str) -> bool:
         """Set the current language.
-        
+
         Args:
             language: Language code (e.g., 'en', 'es', 'fr')
-            
+
         Returns:
             bool: True if language was set successfully
         """
         if language not in self.translations:
             return False
-        
+
         self.current_language = language
         return True
 
     def get_language(self) -> str:
         """Get the current language.
-        
+
         Returns:
             str: Current language code
         """
@@ -80,7 +79,7 @@ class I18nManager:
 
     def get_available_languages(self) -> list[str]:
         """Get list of available languages.
-        
+
         Returns:
             list[str]: List of available language codes
         """
@@ -88,11 +87,11 @@ class I18nManager:
 
     def translate(self, text: str, **kwargs: Any) -> str:
         """Translate a string.
-        
+
         Args:
             text: Text to translate
             **kwargs: Format arguments for the translation
-            
+
         Returns:
             str: Translated text
         """
@@ -104,13 +103,13 @@ class I18nManager:
 
     def translate_plural(self, singular: str, plural: str, count: int, **kwargs: Any) -> str:
         """Translate a string with plural forms.
-        
+
         Args:
             singular: Singular form of the text
             plural: Plural form of the text
             count: Number to determine plural form
             **kwargs: Format arguments for the translation
-            
+
         Returns:
             str: Translated text in appropriate plural form
         """
@@ -120,31 +119,34 @@ class I18nManager:
         translation = self.translations[self.current_language].ngettext(singular, plural, count)
         return translation.format(**kwargs) if kwargs else translation
 
+
 # Create global instance
 i18n = I18nManager()
 
+
 def _(text: str, **kwargs: Any) -> str:
     """Shortcut function for translation.
-    
+
     Args:
         text: Text to translate
         **kwargs: Format arguments for the translation
-        
+
     Returns:
         str: Translated text
     """
     return i18n.translate(text, **kwargs)
 
+
 def ngettext(singular: str, plural: str, count: int, **kwargs: Any) -> str:
     """Shortcut function for plural translation.
-    
+
     Args:
         singular: Singular form of the text
         plural: Plural form of the text
         count: Number to determine plural form
         **kwargs: Format arguments for the translation
-        
+
     Returns:
         str: Translated text in appropriate plural form
     """
-    return i18n.translate_plural(singular, plural, count, **kwargs) 
+    return i18n.translate_plural(singular, plural, count, **kwargs)

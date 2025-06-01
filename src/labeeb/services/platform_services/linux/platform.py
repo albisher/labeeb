@@ -12,6 +12,7 @@ from .fs_handler import LinuxFSHandler
 from .net_handler import LinuxNetHandler
 from .ui_handler import LinuxUIHandler
 
+
 class LinuxPlatform(PlatformInterface):
     def __init__(self):
         self._platform_name = "Linux"
@@ -41,25 +42,19 @@ class LinuxPlatform(PlatformInterface):
 
     def execute_command(self, command: str) -> Dict[str, Any]:
         try:
-            result = subprocess.run(
-                command,
-                shell=True,
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
             return {
                 "success": True,
                 "stdout": result.stdout,
                 "stderr": result.stderr,
-                "return_code": result.returncode
+                "return_code": result.returncode,
             }
         except subprocess.CalledProcessError as e:
             return {
                 "success": False,
                 "stdout": e.stdout,
                 "stderr": e.stderr,
-                "return_code": e.returncode
+                "return_code": e.returncode,
             }
 
     def get_file_path(self, path: str) -> str:
@@ -78,7 +73,9 @@ class LinuxPlatform(PlatformInterface):
     def get_process_list(self) -> List[Dict[str, Any]]:
         # Use ps command for process list
         try:
-            result = self.execute_command("ps -eo pid,ppid,user,%cpu,%mem,vsz,rss,tt,stat,start,time,command")
+            result = self.execute_command(
+                "ps -eo pid,ppid,user,%cpu,%mem,vsz,rss,tt,stat,start,time,command"
+            )
             if not result["success"]:
                 return []
             processes = []
@@ -86,20 +83,22 @@ class LinuxPlatform(PlatformInterface):
             for line in lines:
                 parts = line.split()
                 if len(parts) >= 12:
-                    processes.append({
-                        "pid": int(parts[0]),
-                        "ppid": int(parts[1]),
-                        "user": parts[2],
-                        "cpu_percent": float(parts[3]),
-                        "memory_percent": float(parts[4]),
-                        "vsz": int(parts[5]),
-                        "rss": int(parts[6]),
-                        "tty": parts[7],
-                        "stat": parts[8],
-                        "start": parts[9],
-                        "time": parts[10],
-                        "command": " ".join(parts[11:])
-                    })
+                    processes.append(
+                        {
+                            "pid": int(parts[0]),
+                            "ppid": int(parts[1]),
+                            "user": parts[2],
+                            "cpu_percent": float(parts[3]),
+                            "memory_percent": float(parts[4]),
+                            "vsz": int(parts[5]),
+                            "rss": int(parts[6]),
+                            "tty": parts[7],
+                            "stat": parts[8],
+                            "start": parts[9],
+                            "time": parts[10],
+                            "command": " ".join(parts[11:]),
+                        }
+                    )
             return processes
         except Exception:
             return []
@@ -126,4 +125,4 @@ class LinuxPlatform(PlatformInterface):
 
     def get_bluetooth_devices(self) -> List[Dict[str, Any]]:
         bt_info = self.bt_manager.get_bluetooth_devices()
-        return bt_info.get("devices", []) 
+        return bt_info.get("devices", [])

@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecutionState",
+  "type": "object",
+  "properties": {
+    "state_id": {"type": "string"},
+    "status": {"type": "string", "enum": ["pending", "running", "completed", "failed"]},
+    "steps": {"type": "array", "items": {"type": "string"}},
+    "current_step": {"type": "integer"},
+    "result": {"type": "object"}
+  },
+  "required": ["state_id", "status", "steps", "current_step"]
+} 

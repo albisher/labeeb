@@ -5,12 +5,14 @@ from labeeb.core.ai.mcp_protocol import MCPProtocol
 from labeeb.core.ai.smol_agent import SmolAgentProtocol
 from typing import Dict, Any
 
+
 class ResearcherAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     """
     Agent that plans research, guides the information collector, and writes reports.
     Decomposes research tasks and coordinates sub-agents/tools.
     Implements A2A, MCP, and SmolAgents protocols for enhanced agent communication.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.collector = InformationCollectorAgent()
@@ -31,14 +33,14 @@ class ResearcherAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
 
             # Collect info
             info = await self.collector.collect_info(topic)
-            
+
             # Summarize (simple for now)
             report = f"Research Report on '{topic}':\n"
             for k, v in info.items():
                 report += f"\n[{k.upper()}]\n{v}\n"
-            
+
             result = {"topic": topic, "report": report, "raw": info}
-            
+
             # Notify SmolAgent protocol after research
             await self.smol_protocol.notify_completion("research", result)
             return result
@@ -67,4 +69,4 @@ class ResearcherAgent(Agent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
         await self.smol_protocol.register_capability(capability, handler)
 
     async def unregister_capability(self, capability: str) -> None:
-        await self.smol_protocol.unregister_capability(capability) 
+        await self.smol_protocol.unregister_capability(capability)

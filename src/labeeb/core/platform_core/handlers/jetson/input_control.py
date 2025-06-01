@@ -11,4 +11,4 @@ The module implements specialized input handling for Jetson devices while
 maintaining compatibility with the core Labeeb input system.
 """
 
-from typing import Dict, Any, Optional, Tuple, List, Union 
+from typing import Dict, Any, Optional, Tuple, List, Union

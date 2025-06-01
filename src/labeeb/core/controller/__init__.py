@@ -7,4 +7,4 @@ that handle plan execution, state management, and error recovery.
 
 from labeeb.core.controller.execution_controller import ExecutionController
 
-__all__ = ['ExecutionController'] 
+__all__ = ["ExecutionController"]

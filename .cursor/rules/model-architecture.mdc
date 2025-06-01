@@ -1,0 +1,60 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Labeeb Model Architecture (MDC)
+
+- Each model must represent a single, well-defined data entity, concept, or analytical function (e.g., user, transaction, prediction model).
+- Implement models as self-contained units, encapsulating their structure, logic, and validation rules.
+- Expose clear, explicit interfaces for model data input, output, and transformation.
+- Design models for reuse and easy integration with other models, services, tools, workflows, and handlers.
+- Support model composition to build higher-level analytical or domain models from smaller, focused models.
+- Specify clear input and output schemas for each model to ensure seamless interoperability.
+- Thoroughly document all models, including purpose, schema/structure, expected inputs/outputs, and usage examples.
+- Catalog all models in a central registry or model directory for easy discovery, selection, and reuse.
+- Assign each model a unique, descriptive name reflecting its function or domain, using kebab-case filenames (e.g., user-profile-model.mdc).
+- Ensure models are robust, with comprehensive validation, error handling, and clear error messages.
+- Support logging, monitoring, and versioning for each model to facilitate maintenance and traceability.
+- Test models both in isolation and as part of integrated flows to ensure reliable operation.
+- Make model logic, structure, and assumptions explicit and auditable.
+- Maintain versioning for each model, with a clear record of changes and rationale.
+- Ensure model lineage (data flow in/out) is traceable for compliance and debugging.
+- Design models to be platform-agnostic, running consistently across multiple platforms and environments.
+- Use standardized formats (e.g., JSON Schema, Pydantic, Protobuf) for model definitions and data interchange.
+- Each model definition file must describe a single model (one model per file).
+- Start each file with a YAML frontmatter block specifying: description, schema, inputs, outputs, dependencies, version, alwaysApply.
+- Define the model's logic, structure, and validation rules as a clear, ordered list or schema. Specify assumptions, constraints, and transformation logic where relevant.
+- Keep model definitions focused and modular; decompose complex models into smaller, specialized models if needed.
+- Reference any supporting files, schemas, or templates using @filename.ext at the end of the file.
+- **MCP Compliance:** Models must be accessible via MCP-compatible endpoints (e.g., JSON-RPC 2.0), supporting remote invocation and integration with agentic systems.
+- **Dynamic Discovery:** Models should support dynamic discovery of their capabilities and interfaces via MCP servers or registries.
+- **Client/Server Role:** Clearly define whether the model acts as a client (requesting context/actions) or server (exposing data/actions) in MCP-based interactions.
+
+## Minimal Model File Example
+
+```
+---
+description: Data model for user profiles, including personal and account information.
+schema: user-profile-schema.json
+inputs: [user_id, name, email, date_of_birth]
+outputs: [user_profile_object]
+dependencies: [email-validator-tool]
+version: 1.0.0
+alwaysApply: false
+---
+
+- Define required fields: `user_id`, `name`, `email`, `date_of_birth`.
+- Validate `email` using `email-validator-tool`.
+- Enforce unique constraint on `user_id`.
+- Support serialization/deserialization to and from JSON.
+- Log model creation and update events.
+- Expose model actions and data via MCP-compatible (JSON-RPC 2.0) endpoint.
+- Register model in MCP server/registry for dynamic discovery.
+@user-profile-schema.json
+@email-validator-tool.mdc
+```
+
+# Changelog
+- v1.1: Added explicit MCP compliance, dynamic discovery, and client/server role requirements.
+- v1.0: Initial version, compliant with rule-structure-standards.mdc.

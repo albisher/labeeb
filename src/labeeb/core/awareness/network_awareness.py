@@ -6,13 +6,13 @@ Use PlatformManager for all network awareness logic.
 # Deprecated stub for backward compatibility
 from platform_core.platform_manager import PlatformManager
 
-import platform
 import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
-from labeeb.core.platform_core.platform_utils import get_platform_name, is_mac, is_windows, is_linux
+from labeeb.services.platform_services.common import platform_utils
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class InterfaceInfo:
@@ -22,15 +22,18 @@ class InterfaceInfo:
     is_up: bool
     speed: Optional[int] = None
 
+
 class NetworkAwarenessManager:
     """Provides awareness of network interfaces, usage, and connectivity."""
+
     def __init__(self):
-        self.platform = get_platform_name()
+        self.platform = platform_utils.get_platform_name()
 
     def get_active_interfaces(self) -> Dict[str, Any]:
         """Get a list of active network interfaces with IP and MAC addresses."""
         try:
             import psutil
+
             interfaces = []
             stats = psutil.net_if_stats()
             addrs = psutil.net_if_addrs()
@@ -39,17 +42,19 @@ class NetworkAwarenessManager:
                     ip = None
                     mac = None
                     for addr in addrs.get(name, []):
-                        if addr.family.name == 'AF_INET':
+                        if addr.family.name == "AF_INET":
                             ip = addr.address
-                        elif addr.family.name == 'AF_PACKET' or addr.family.name == 'AF_LINK':
+                        elif addr.family.name == "AF_PACKET" or addr.family.name == "AF_LINK":
                             mac = addr.address
-                    interfaces.append(InterfaceInfo(
-                        name=name,
-                        ip=ip,
-                        mac=mac,
-                        is_up=stat.isup,
-                        speed=getattr(stat, 'speed', None)
-                    ))
+                    interfaces.append(
+                        InterfaceInfo(
+                            name=name,
+                            ip=ip,
+                            mac=mac,
+                            is_up=stat.isup,
+                            speed=getattr(stat, "speed", None),
+                        )
+                    )
             return {"interfaces": [i.__dict__ for i in interfaces], "status": "ok", "message": ""}
         except Exception as e:
             logger.error(f"Failed to enumerate network interfaces: {e}")
@@ -59,6 +64,7 @@ class NetworkAwarenessManager:
         """Get bandwidth usage per interface."""
         try:
             import psutil
+
             usage = {}
             counters = psutil.net_io_counters(pernic=True)
             for name, counter in counters.items():
@@ -66,7 +72,7 @@ class NetworkAwarenessManager:
                     "bytes_sent": counter.bytes_sent,
                     "bytes_recv": counter.bytes_recv,
                     "packets_sent": counter.packets_sent,
-                    "packets_recv": counter.packets_recv
+                    "packets_recv": counter.packets_recv,
                 }
             return {"usage": usage, "status": "ok", "message": ""}
         except Exception as e:
@@ -77,20 +83,23 @@ class NetworkAwarenessManager:
         """Get top processes by network usage (if possible)."""
         try:
             import psutil
+
             procs = []
-            for proc in psutil.process_iter(['pid', 'name', 'username', 'connections']):
+            for proc in psutil.process_iter(["pid", "name", "username", "connections"]):
                 try:
-                    conns = proc.info.get('connections', [])
+                    conns = proc.info.get("connections", [])
                     if conns:
-                        procs.append({
-                            "pid": proc.info['pid'],
-                            "name": proc.info['name'],
-                            "user": proc.info['username'],
-                            "num_connections": len(conns)
-                        })
+                        procs.append(
+                            {
+                                "pid": proc.info["pid"],
+                                "name": proc.info["name"],
+                                "user": proc.info["username"],
+                                "num_connections": len(conns),
+                            }
+                        )
                 except Exception:
                     pass
-            procs = sorted(procs, key=lambda p: p['num_connections'], reverse=True)[:top_n]
+            procs = sorted(procs, key=lambda p: p["num_connections"], reverse=True)[:top_n]
             return {"top_processes": procs, "status": "ok", "message": ""}
         except Exception as e:
             logger.error(f"Failed to get top network processes: {e}")
@@ -101,6 +110,7 @@ class NetworkAwarenessManager:
         try:
             import socket
             import psutil
+
             online = False
             try:
                 # Try to connect to a public DNS
@@ -111,22 +121,23 @@ class NetworkAwarenessManager:
             gateways = psutil.net_if_stats()
             dns = None
             try:
-                import platform
-                if platform.system() == "Darwin":
+                if platform_utils.get_platform_name() == "Darwin":
                     import subprocess
+
                     out = subprocess.check_output(["scutil", "--dns"]).decode()
                     for line in out.splitlines():
                         if "nameserver" in line:
                             dns = line.split()[1]
                             break
-                elif platform.system() == "Linux":
+                elif platform_utils.get_platform_name() == "Linux":
                     with open("/etc/resolv.conf") as f:
                         for line in f:
                             if line.startswith("nameserver"):
                                 dns = line.split()[1]
                                 break
-                elif platform.system() == "Windows":
+                elif platform_utils.get_platform_name() == "Windows":
                     import subprocess
+
                     out = subprocess.check_output(["nslookup"]).decode()
                     for line in out.splitlines():
                         if "Address:" in line:
@@ -137,4 +148,4 @@ class NetworkAwarenessManager:
             return {"online": online, "dns": dns, "status": "ok", "message": ""}
         except Exception as e:
             logger.error(f"Failed to get connection status: {e}")
-            return {"online": False, "dns": None, "status": "unavailable", "message": str(e)} 
+            return {"online": False, "dns": None, "status": "unavailable", "message": str(e)}

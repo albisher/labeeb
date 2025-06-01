@@ -4,6 +4,7 @@ from labeeb.platform_core.platform_manager import PlatformManager
 
 logger = logging.getLogger(__name__)
 
+
 class OutputStyleManager:
     def __init__(self):
         self.platform_manager = PlatformManager()
@@ -14,88 +15,82 @@ class OutputStyleManager:
     def _init_styles(self) -> Dict[str, Any]:
         """Initialize platform-specific styles"""
         base_styles = {
-            'colors': {
-                'primary': '#007AFF',
-                'secondary': '#5856D6',
-                'success': '#34C759',
-                'warning': '#FF9500',
-                'error': '#FF3B30',
-                'info': '#5AC8FA',
-                'background': '#FFFFFF',
-                'text': '#000000'
+            "colors": {
+                "primary": "#007AFF",
+                "secondary": "#5856D6",
+                "success": "#34C759",
+                "warning": "#FF9500",
+                "error": "#FF3B30",
+                "info": "#5AC8FA",
+                "background": "#FFFFFF",
+                "text": "#000000",
             },
-            'fonts': {
-                'primary': 'System',
-                'secondary': 'System',
-                'monospace': 'Monaco'
-            },
-            'spacing': {
-                'small': '4px',
-                'medium': '8px',
-                'large': '16px'
-            },
-            'borders': {
-                'radius': '4px',
-                'width': '1px',
-                'color': '#E5E5EA'
-            }
+            "fonts": {"primary": "System", "secondary": "System", "monospace": "Monaco"},
+            "spacing": {"small": "4px", "medium": "8px", "large": "16px"},
+            "borders": {"radius": "4px", "width": "1px", "color": "#E5E5EA"},
         }
 
         # Add platform-specific styles
-        if self.platform_info['name'] == 'mac':
-            base_styles.update({
-                'colors': {
-                    'primary': '#007AFF',
-                    'secondary': '#5856D6',
-                    'success': '#34C759',
-                    'warning': '#FF9500',
-                    'error': '#FF3B30',
-                    'info': '#5AC8FA',
-                    'background': '#FFFFFF',
-                    'text': '#000000'
-                },
-                'fonts': {
-                    'primary': 'SF Pro',
-                    'secondary': 'SF Pro Text',
-                    'monospace': 'SF Mono'
+        if self.platform_info["name"] == "mac":
+            base_styles.update(
+                {
+                    "colors": {
+                        "primary": "#007AFF",
+                        "secondary": "#5856D6",
+                        "success": "#34C759",
+                        "warning": "#FF9500",
+                        "error": "#FF3B30",
+                        "info": "#5AC8FA",
+                        "background": "#FFFFFF",
+                        "text": "#000000",
+                    },
+                    "fonts": {
+                        "primary": "SF Pro",
+                        "secondary": "SF Pro Text",
+                        "monospace": "SF Mono",
+                    },
                 }
-            })
-        elif self.platform_info['name'] == 'windows':
-            base_styles.update({
-                'colors': {
-                    'primary': '#0078D4',
-                    'secondary': '#2B88D8',
-                    'success': '#107C10',
-                    'warning': '#FFB900',
-                    'error': '#D13438',
-                    'info': '#00BCF2',
-                    'background': '#FFFFFF',
-                    'text': '#000000'
-                },
-                'fonts': {
-                    'primary': 'Segoe UI',
-                    'secondary': 'Segoe UI',
-                    'monospace': 'Consolas'
+            )
+        elif self.platform_info["name"] == "windows":
+            base_styles.update(
+                {
+                    "colors": {
+                        "primary": "#0078D4",
+                        "secondary": "#2B88D8",
+                        "success": "#107C10",
+                        "warning": "#FFB900",
+                        "error": "#D13438",
+                        "info": "#00BCF2",
+                        "background": "#FFFFFF",
+                        "text": "#000000",
+                    },
+                    "fonts": {
+                        "primary": "Segoe UI",
+                        "secondary": "Segoe UI",
+                        "monospace": "Consolas",
+                    },
                 }
-            })
-        elif self.platform_info['name'] == 'ubuntu':
-            base_styles.update({
-                'colors': {
-                    'primary': '#E95420',
-                    'secondary': '#772953',
-                    'success': '#38B44A',
-                    'warning': '#EFB73E',
-                    'error': '#DF382C',
-                    'info': '#19B6EE',
-                    'background': '#FFFFFF',
-                    'text': '#000000'
-                },
-                'fonts': {
-                    'primary': 'Ubuntu',
-                    'secondary': 'Ubuntu',
-                    'monospace': 'Ubuntu Mono'
+            )
+        elif self.platform_info["name"] == "ubuntu":
+            base_styles.update(
+                {
+                    "colors": {
+                        "primary": "#E95420",
+                        "secondary": "#772953",
+                        "success": "#38B44A",
+                        "warning": "#EFB73E",
+                        "error": "#DF382C",
+                        "info": "#19B6EE",
+                        "background": "#FFFFFF",
+                        "text": "#000000",
+                    },
+                    "fonts": {
+                        "primary": "Ubuntu",
+                        "secondary": "Ubuntu",
+                        "monospace": "Ubuntu Mono",
+                    },
                 }
-            })
+            )
 
         return base_styles
 
@@ -124,4 +119,4 @@ class OutputStyleManager:
 
     def reset_styles(self) -> None:
         """Reset styles to default"""
-        self.styles = self._init_styles() 
+        self.styles = self._init_styles()

@@ -1,12 +1,14 @@
 import orjson
 from typing import Any, Dict, Optional
 
+
 class JSONTool:
     """Tool for fast, correct JSON handling using orjson."""
-    name = 'json'
+
+    name = "json"
     description = "Fast, correct JSON handling (load, dump, validate, pretty-print) using orjson."
 
-    def __init__(self, lang: str = 'en'):
+    def __init__(self, lang: str = "en"):
         self.lang = lang
 
     def load(self, s: str) -> Any:
@@ -38,18 +40,18 @@ class JSONTool:
 
     def execute(self, action: str, **kwargs) -> Any:
         """Agent-compatible execute method for A2A/MCP/SmolAgents."""
-        if action == 'load':
-            return self.load(kwargs.get('s', ''))
-        elif action == 'dump':
-            return self.dump(kwargs.get('obj'), kwargs.get('pretty', False))
-        elif action == 'validate':
-            return self.validate(kwargs.get('s', ''))
-        elif action == 'pretty_print':
-            return self.pretty_print(kwargs.get('s', ''))
+        if action == "load":
+            return self.load(kwargs.get("s", ""))
+        elif action == "dump":
+            return self.dump(kwargs.get("obj"), kwargs.get("pretty", False))
+        elif action == "validate":
+            return self.validate(kwargs.get("s", ""))
+        elif action == "pretty_print":
+            return self.pretty_print(kwargs.get("s", ""))
         else:
             return self._error(f"Unknown action: {action}")
 
     def _error(self, msg: str) -> str:
-        if self.lang == 'ar':
+        if self.lang == "ar":
             return f"❌ خطأ: {msg}"
-        return f"❌ Error: {msg}" 
+        return f"❌ Error: {msg}"

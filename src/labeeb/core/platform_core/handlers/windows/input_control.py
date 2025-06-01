@@ -5,4 +5,4 @@ on Windows systems. It includes functionality for simulating keyboard events, mo
 and clicks using the Windows API through appropriate Python bindings.
 """
 
-from typing import Dict, Any, Optional, Tuple, List, Union 
+from typing import Dict, Any, Optional, Tuple, List, Union

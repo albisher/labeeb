@@ -2,8 +2,10 @@ import pyperclip
 from labeeb.core.platform_core.common.base_handler import BaseHandler
 from typing import Optional, Dict, Any
 
+
 class LinuxClipboardHandler(BaseHandler):
     """Clipboard handler for Linux using pyperclip."""
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         super().__init__(config)
         self._initialized = False
@@ -22,4 +24,4 @@ class LinuxClipboardHandler(BaseHandler):
         pyperclip.copy("")
 
     def cleanup(self) -> None:
-        self._initialized = False 
+        self._initialized = False
