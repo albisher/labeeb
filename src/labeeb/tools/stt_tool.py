@@ -1,15 +1,15 @@
 """
-Speech-to-Text tool module for Labeeb.
+Speech-to-text tool for converting speech to text.
 
-This module provides functionality to convert speech to text using Whisper.
-It uses the OpenAI Whisper model for accurate speech recognition in both Arabic and English.
+This module provides functionality to convert speech to text using a workflow approach.
+It uses Whisper for speech recognition.
 
 ---
 description: Convert speech to text
-endpoints: [transcribe]
+endpoints: [transcribe, record_from_microphone]
 inputs: [audio_file, language]
 outputs: [text]
-dependencies: [whisper]
+dependencies: [whisper, sounddevice, numpy]
 auth: none
 alwaysApply: false
 ---
@@ -18,64 +18,40 @@ alwaysApply: false
 import os
 import logging
 import whisper
+import sounddevice as sd
+import numpy as np
 from typing import Dict, Any, Optional
 from labeeb.core.config_manager import ConfigManager
+import tempfile
+import wave
 
 logger = logging.getLogger(__name__)
 
 class STTTool:
-    """Tool for speech-to-text conversion."""
+    """Tool for converting speech to text."""
     
     def __init__(self):
         """Initialize the STT tool."""
         self.config = ConfigManager()
-        self.models = {
-            "en": "base.en",  # English model
-            "ar": "base"      # Multilingual model for Arabic
-        }
-        self.loaded_models = {}
+        self.model = whisper.load_model("base")
         
-    def _load_model(self, language: str) -> whisper.Whisper:
-        """Load the appropriate model for the given language."""
-        if language not in self.models:
-            raise ValueError(f"Unsupported language: {language}")
-            
-        if language not in self.loaded_models:
-            try:
-                model_name = self.models[language]
-                self.loaded_models[language] = whisper.load_model(model_name)
-            except Exception as e:
-                logger.error(f"Error loading Whisper model for {language}: {e}")
-                raise
-                
-        return self.loaded_models[language]
-            
     def transcribe(self, audio_file: str, language: str = "en") -> Dict[str, Any]:
         """
-        Transcribe speech from an audio file.
+        Convert speech to text from an audio file.
         
         Args:
-            audio_file: Path to the audio file
-            language: Language code ("en" for English, "ar" for Arabic)
+            audio_file: Path to the audio file.
+            language: Language code ("en" for English, "ar" for Arabic).
             
         Returns:
-            Dict containing transcription and metadata
+            Dict containing the transcribed text.
             
         Raises:
-            FileNotFoundError: If the audio file doesn't exist
-            ValueError: If language is not supported
-            Exception: If transcription fails
+            Exception: If transcription fails.
         """
         try:
-            # Check if file exists
-            if not os.path.exists(audio_file):
-                raise FileNotFoundError(f"Audio file not found: {audio_file}")
-                
-            # Load appropriate model
-            model = self._load_model(language)
-            
             # Transcribe audio
-            result = model.transcribe(
+            result = self.model.transcribe(
                 audio_file,
                 language=language,
                 task="transcribe"
@@ -83,10 +59,64 @@ class STTTool:
             
             return {
                 "text": result["text"],
-                "segments": result["segments"],
-                "language": result["language"]
+                "language": language
             }
             
         except Exception as e:
-            logger.error(f"Error transcribing audio: {e}")
-            raise 
+            error_msg = f"Error transcribing audio: {e}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+            
+    def record_from_microphone(self, language: str = "en", duration: int = 5) -> Dict[str, Any]:
+        """
+        Record audio from microphone and convert to text.
+        
+        Args:
+            language: Language code ("en" for English, "ar" for Arabic).
+            duration: Recording duration in seconds.
+            
+        Returns:
+            Dict containing the transcribed text.
+            
+        Raises:
+            Exception: If recording or transcription fails.
+        """
+        try:
+            # Set up recording parameters
+            sample_rate = 16000
+            channels = 1
+            
+            print(f"Recording for {duration} seconds...")
+            
+            # Record audio
+            recording = sd.rec(
+                int(duration * sample_rate),
+                samplerate=sample_rate,
+                channels=channels,
+                dtype='float32'
+            )
+            sd.wait()
+            
+            # Convert to 16-bit PCM
+            recording = (recording * 32767).astype(np.int16)
+            
+            # Save to temporary WAV file
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                with wave.open(temp_file.name, 'wb') as wf:
+                    wf.setnchannels(channels)
+                    wf.setsampwidth(2)  # 2 bytes for int16
+                    wf.setframerate(sample_rate)
+                    wf.writeframes(recording.tobytes())
+                
+                # Transcribe the temporary file
+                result = self.transcribe(temp_file.name, language)
+                
+                # Clean up
+                os.unlink(temp_file.name)
+                
+                return result
+            
+        except Exception as e:
+            error_msg = f"Error recording from microphone: {e}"
+            logger.error(error_msg)
+            raise Exception(error_msg) 

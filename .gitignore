@@ -212,4 +212,16 @@ results/
 metrics/
 logs/
 
-coverage/ 
+coverage/
+
+# Ignore generated files
+output/
+output/screenshots/
+output/audio/
+*.wav
+*.mp3
+*.aiff
+*.png
+*.jpg
+*.jpeg
+*.gif 

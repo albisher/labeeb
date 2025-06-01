@@ -1,15 +1,15 @@
 """
-Text-to-Speech tool for converting text to speech.
+Text-to-speech tool for converting text to speech.
 
-This module provides functionality to convert text to speech using system commands.
-It supports both Arabic and English languages.
+This module provides functionality to convert text to speech using a workflow approach.
+It uses pyttsx3 for text-to-speech conversion.
 
 ---
 description: Convert text to speech
 endpoints: [speak, save_to_file]
-inputs: [text, filename, language]
-outputs: [success]
-dependencies: []
+inputs: [text, language]
+outputs: [audio_file]
+dependencies: [pyttsx3]
 auth: none
 alwaysApply: false
 ---
@@ -17,90 +17,101 @@ alwaysApply: false
 
 import os
 import logging
-import subprocess
-from pathlib import Path
+import pyttsx3
 from typing import Dict, Any, Optional
 from labeeb.core.config_manager import ConfigManager
+import tempfile
+import platform
 
 logger = logging.getLogger(__name__)
 
 class TTSTool:
-    """Tool for text-to-speech conversion."""
+    """Tool for converting text to speech."""
     
     def __init__(self):
         """Initialize the TTS tool."""
-        self.output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "output", "audio")
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.config = ConfigManager()
+        self.engine = pyttsx3.init()
         
-        # Available voices for each language
+        # Set up voices
+        voices = self.engine.getProperty('voices')
         self.voices = {
-            "en": "Samantha",  # English voice
-            "ar": "Tarik"      # Arabic voice
+            'en': next((v for v in voices if 'en' in v.id.lower()), voices[0]),
+            'ar': next((v for v in voices if 'ar' in v.id.lower()), voices[0])
         }
-            
-    def speak(self, text: str, language: str = "en") -> bool:
-        """
-        Speak the given text.
         
-        Args:
-            text: The text to speak.
-            language: Language code ("en" for English, "ar" for Arabic).
-            
-        Returns:
-            bool: True if successful, False otherwise.
-            
-        Raises:
-            Exception: If speaking fails.
+        # Set default properties
+        self.engine.setProperty('rate', 150)    # Speed of speech
+        self.engine.setProperty('volume', 1.0)  # Volume (0.0 to 1.0)
+        
+    def speak(self, text: str, language: str = "en") -> None:
         """
-        try:
-            voice = self.voices.get(language, self.voices["en"])
-            cmd = ["say", "-v", voice, text]
-            subprocess.run(cmd, check=True)
-            return True
-        except Exception as e:
-            error_msg = f"Error speaking text: {e}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
-            
-    def save_to_file(self, text: str, filename: str, language: str = "en") -> bool:
-        """
-        Save the given text as speech to a file.
+        Convert text to speech and play it.
         
         Args:
             text: The text to convert to speech.
-            filename: The name of the output file.
-            language: Language code ("en" for English, "ar" for Arabic).
-            
-        Returns:
-            bool: True if successful, False otherwise.
+            language: The language of the text ('en' or 'ar').
             
         Raises:
-            Exception: If saving to file fails.
+            Exception: If text cannot be converted to speech.
         """
         try:
-            # Ensure filename is in the output directory
-            if not os.path.isabs(filename):
-                filename = os.path.join(self.output_dir, filename)
-                
-            # Create parent directories if they don't exist
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            # Set the voice based on language
+            voice = self.voices.get(language, self.voices['en'])
+            self.engine.setProperty('voice', voice.id)
             
-            voice = self.voices.get(language, self.voices["en"])
+            # For Arabic text, ensure proper text direction
+            if language == 'ar':
+                # Add RTL mark and ensure proper text direction
+                text = f"\u202E{text}\u202C"
             
-            # First save to a temporary file
-            temp_file = filename + ".aiff"
-            cmd = ["say", "-v", voice, "-o", temp_file, text]
-            subprocess.run(cmd, check=True)
+            # Speak the text
+            self.engine.say(text)
+            self.engine.runAndWait()
             
-            # Convert to WAV format
-            cmd = ["afconvert", "-f", "WAVE", "-d", "LEI16@44100", temp_file, filename]
-            subprocess.run(cmd, check=True)
-            
-            # Remove temporary file
-            os.remove(temp_file)
-            
-            return True
         except Exception as e:
-            error_msg = f"Error saving speech to file: {e}"
+            error_msg = f"Error converting text to speech: {e}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+            
+    def save_to_file(self, text: str, output_file: str, language: str = "en") -> Dict[str, Any]:
+        """
+        Convert text to speech and save to a file.
+        
+        Args:
+            text: The text to convert to speech.
+            output_file: The path to save the audio file.
+            language: The language of the text ('en' or 'ar').
+            
+        Returns:
+            Dict containing the output file path.
+            
+        Raises:
+            Exception: If text cannot be converted to speech.
+        """
+        try:
+            # Ensure output directory exists
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            
+            # Set the voice based on language
+            voice = self.voices.get(language, self.voices['en'])
+            self.engine.setProperty('voice', voice.id)
+            
+            # For Arabic text, ensure proper text direction
+            if language == 'ar':
+                # Add RTL mark and ensure proper text direction
+                text = f"\u202E{text}\u202C"
+            
+            # Save to file
+            self.engine.save_to_file(text, output_file)
+            self.engine.runAndWait()
+            
+            return {
+                "output_file": output_file,
+                "language": language
+            }
+            
+        except Exception as e:
+            error_msg = f"Error saving text to speech file: {e}"
             logger.error(error_msg)
             raise Exception(error_msg) 
