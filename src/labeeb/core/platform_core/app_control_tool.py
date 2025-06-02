@@ -12,7 +12,7 @@ import platform
 import subprocess
 import time
 from typing import Dict, Any, Optional
-from labeeb.core.ai.tools.base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +26,9 @@ class AppControlTool(BaseTool):
         Args:
             config: Optional configuration dictionary
         """
-        super().__init__(
-            name="app_control",
-            description="Manages application launching and control for the Labeeb agent",
-        )
+        super().__init__()
+        self.name = "app_control"
+        self.description = "Manages application launching and control for the Labeeb agent"
         self.config = config or {}
 
         # Arabic translations for actions
@@ -220,3 +219,13 @@ class AppControlTool(BaseTool):
             return {"error": "No app specified"}
 
         return await self.execute(action, app)
+
+    def validate_config(self) -> bool:
+        return True
+
+    def _execute_tool(self, input_data: dict) -> dict:
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        # All actions are async in this tool
+        return {"status": "error", "message": f"Action '{action}' requires async execution"}

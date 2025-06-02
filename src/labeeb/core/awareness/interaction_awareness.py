@@ -85,13 +85,23 @@ class InteractionAwarenessTool:
         """Get current mouse position."""
         if not PYAUTOGUI_AVAILABLE:
             return (0, 0)
-        return pyautogui.position()
+        try:
+            return pyautogui.position()
+        except Exception as e:
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+            raise
 
     def get_screen_size(self) -> Tuple[int, int]:
         """Get screen dimensions."""
         if not PYAUTOGUI_AVAILABLE:
             return (0, 0)
-        return pyautogui.size()
+        try:
+            return pyautogui.size()
+        except Exception as e:
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+            raise
 
     def get_active_window(self) -> Optional[str]:
         """Get active window title."""
@@ -99,8 +109,10 @@ class InteractionAwarenessTool:
             return None
         try:
             return pyautogui.getActiveWindow().title
-        except:
-            return None
+        except Exception as e:
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+            raise
 
     def get_system_info(self) -> Dict[str, Any]:
         """Get system resource usage."""

@@ -20,6 +20,8 @@ import platform
 import logging
 from typing import Dict, Optional, Any, List
 
+from .platform_factory import PlatformFactory
+
 logger = logging.getLogger(__name__)
 
 # Platform mapping from OS identifiers to canonical names

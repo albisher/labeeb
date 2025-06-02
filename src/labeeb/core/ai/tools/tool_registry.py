@@ -5,7 +5,7 @@ This module provides the ToolRegistry class for managing all available tools.
 """
 
 from typing import Dict, Type, Optional
-from .base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 
 
 class ToolRegistry:

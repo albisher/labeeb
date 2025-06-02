@@ -8,7 +8,7 @@ implementing A2A (Agent-to-Agent), MCP (Model Context Protocol), and SmolAgents 
 import os
 import psutil
 from typing import Any, Dict
-from .base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 
 
 class SystemResourceTool(BaseTool):
@@ -16,10 +16,9 @@ class SystemResourceTool(BaseTool):
 
     def __init__(self):
         """Initialize the SystemResourceTool."""
-        super().__init__(
-            name="SystemResourceTool",
-            description="Monitors and manages system resources including CPU, memory, and disk usage",
-        )
+        super().__init__()
+        self.name = "SystemResourceTool"
+        self.description = "Monitors and manages system resources including CPU, memory, and disk usage"
 
     async def execute(self, action: str, **kwargs) -> Dict[str, Any]:
         """
@@ -157,3 +156,28 @@ class SystemResourceTool(BaseTool):
             return self._get_process_info(**args)
         else:
             return {"error": f"Unknown action: {action}"}
+
+    def validate_config(self) -> bool:
+        return True
+
+    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        args = input_data.get('args', {})
+        if action == "get_cpu_usage":
+            return self._get_cpu_usage(**args)
+        elif action == "get_memory_usage":
+            return self._get_memory_usage(**args)
+        elif action == "get_disk_usage":
+            return self._get_disk_usage(**args)
+        elif action == "get_process_info":
+            return self._get_process_info(**args)
+        elif action == "status":
+            return {
+                "cpu": self._get_cpu_usage(),
+                "memory": self._get_memory_usage(),
+                "disk": self._get_disk_usage(),
+            }
+        else:
+            return {"status": "error", "message": f"Unknown action: {action}"}

@@ -4,7 +4,6 @@ Platform core module for Labeeb.
 This module provides platform-specific functionality and isolation.
 """
 
-from .platform_manager import platform_manager
 from labeeb.core.platform_core.handlers.base_handler import BaseHandler
 
 from .platform_utils import (
@@ -24,7 +23,6 @@ from .platform_factory import create_platform
 from .platform_interface import PlatformInterface
 
 __all__ = [
-    "platform_manager",
     "BaseHandler",
     "get_platform_name",
     "is_windows",

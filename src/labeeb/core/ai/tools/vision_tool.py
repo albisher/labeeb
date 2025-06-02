@@ -4,7 +4,6 @@ from transformers import AutoProcessor, AutoModelForVision2Seq
 from typing import Optional
 from labeeb.core.ai.tool_base import BaseTool
 import logging
-import pyautogui
 import tempfile
 
 logger = logging.getLogger(__name__)
@@ -69,14 +68,26 @@ class VisionTool(BaseTool):
             if not image_path:
                 # Take screenshot using pyautogui
                 if filename:
-                    screenshot = pyautogui.screenshot()
-                    screenshot.save(filename)
-                    image_path = filename
+                    try:
+                        import pyautogui
+                        screenshot = pyautogui.screenshot()
+                        screenshot.save(filename)
+                        image_path = filename
+                    except Exception as e:
+                        if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                            raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                        raise
                 else:
                     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-                        screenshot = pyautogui.screenshot()
-                        screenshot.save(tmp.name)
-                        image_path = tmp.name
+                        try:
+                            import pyautogui
+                            screenshot = pyautogui.screenshot()
+                            screenshot.save(tmp.name)
+                            image_path = tmp.name
+                        except Exception as e:
+                            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                            raise
             try:
                 result = self.analyze_image(image_path, prompt)
                 return {"result": result, "image_path": image_path}

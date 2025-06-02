@@ -5,6 +5,7 @@ Handles command registration and processing.
 
 from dataclasses import dataclass
 from typing import Dict, Any, Callable, Optional
+from labeeb.core.ai_command_interpreter import AICommandInterpreter
 
 
 @dataclass
@@ -28,6 +29,7 @@ class CommandProcessor:
         self.commands: Dict[str, Callable] = {}
         self.handlers: Dict[str, Callable] = {}
         self.ai_handler = ai_handler
+        self.ai_interpreter = AICommandInterpreter()
 
     def register_command(self, command: str, handler: Callable) -> None:
         """Register a new command.
@@ -58,14 +60,15 @@ class CommandProcessor:
             args = " ".join(parts[1:])
 
             # Check if command exists
-            if cmd_name not in self.commands:
-                return CommandResult(False, error=f"Unknown command: {cmd_name}")
-
-            # Execute command
-            handler = self.commands[cmd_name]
-            output = handler(args)
-
-            return CommandResult(True, output=output)
+            if cmd_name in self.commands:
+                # Execute command
+                handler = self.commands[cmd_name]
+                output = handler(args)
+                return CommandResult(True, output=output)
+            else:
+                # Use AI interpreter for natural language commands
+                output = self.ai_interpreter.process_command(command)
+                return CommandResult(True, output=output)
 
         except Exception as e:
             return CommandResult(False, error=str(e))

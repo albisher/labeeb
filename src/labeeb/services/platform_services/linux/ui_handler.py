@@ -4,9 +4,17 @@ import json
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-import Xlib
-import Xlib.display
-from ..base_ui_handler import BaseUIHandler
+try:
+    import Xlib
+    import Xlib.display
+except ImportError:
+    raise RuntimeError("Xlib is required for this feature. Please install python3-xlib.")
+except Exception as e:
+    if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+        raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+    raise
+
+from labeeb.services.platform_services.base_ui_handler import BaseUIHandler
 
 logger = logging.getLogger(__name__)
 

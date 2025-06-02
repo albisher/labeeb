@@ -7,7 +7,7 @@ implementing A2A (Agent-to-Agent), MCP (Model Context Protocol), and SmolAgents 
 
 from datetime import datetime, timedelta
 from typing import Any, Dict
-from .base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 
 
 class DateTimeTool(BaseTool):
@@ -15,10 +15,9 @@ class DateTimeTool(BaseTool):
 
     def __init__(self):
         """Initialize the DateTimeTool."""
-        super().__init__(
-            name="DateTimeTool",
-            description="Handles date and time operations including formatting, parsing, and calculations",
-        )
+        super().__init__()
+        self.name = "DateTimeTool"
+        self.description = "Handles date and time operations including formatting, parsing, and calculations"
 
     async def execute(self, action: str, **kwargs) -> Dict[str, Any]:
         """
@@ -103,3 +102,24 @@ class DateTimeTool(BaseTool):
         delta = timedelta(days=days, hours=hours, minutes=minutes)
         result = dt - delta
         return {"datetime": result.isoformat(), "timestamp": result.timestamp()}
+
+    def validate_config(self) -> bool:
+        return True
+
+    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        args = input_data.get('args', {})
+        if action == "get_current_time":
+            return self._get_current_time(**args)
+        elif action == "format_datetime":
+            return self._format_datetime(**args)
+        elif action == "parse_datetime":
+            return self._parse_datetime(**args)
+        elif action == "add_time":
+            return self._add_time(**args)
+        elif action == "subtract_time":
+            return self._subtract_time(**args)
+        else:
+            return {"status": "error", "message": f"Unknown action: {action}"}

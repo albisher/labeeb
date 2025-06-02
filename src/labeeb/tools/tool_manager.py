@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict, List, Optional, Type
 
-from .base_tool import BaseAgentTool
+from labeeb.tools.base_tool import BaseAgentTool
 
 logger = logging.getLogger(__name__)
 

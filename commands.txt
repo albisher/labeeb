@@ -1,6 +1,6 @@
 # Basic Commands
 Take a screenshot of my desktop and save it.
-What is the weather in Cairo right now?
+What is the weather in Kuwait right now?
 Add 42 and 58.
 Search the web for the latest AI news.
 Copy the text Hello, world to the clipboard.
@@ -9,7 +9,7 @@ Open the calculator and calculate 7 times 8.
 
 # Arabic Commands
 افتح الحاسبة واحسب ١٢ زائد ٣٤
-ما هو الطقس في الرياض الآن؟
+ما هو الطقس في الكويت الآن؟
 خذ لقطة شاشة واحفظها
 ابحث في الإنترنت عن أحدث أخبار الذكاء الاصطناعي
 انسخ النص مرحبا إلى الحافظة

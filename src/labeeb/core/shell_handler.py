@@ -14,7 +14,6 @@ from labeeb.core.platform_core.platform_utils import get_platform_name
 from labeeb.core.device_manager.usb_detector import USBDetector
 from labeeb.core.browser_handler import BrowserHandler
 from labeeb.core.file_search import FileSearch
-from labeeb.core.platform_core.platform_manager import PlatformManager
 
 
 # Define CommandSafetyLevel enumeration to fix the import error
@@ -194,6 +193,7 @@ class ShellHandler:
             quiet_mode (bool): If True, reduces unnecessary terminal output.
             fast_mode (bool): If True, doesn't wait for feedback on errors, exits immediately.
         """
+        from labeeb.core.platform_core.platform_manager import PlatformManager
         # Get platform-specific shell handler
         platform_manager = PlatformManager()
         platform_manager.initialize()

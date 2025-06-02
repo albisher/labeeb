@@ -1,10 +1,8 @@
 import logging
-import pyautogui
 import gettext
 import locale
 import os
 from typing import Dict, Any, Tuple
-from labeeb.core.platform_core.platform_manager import PlatformManager
 from labeeb.core.ai.tool_base import BaseTool
 from labeeb.core.ai.a2a_protocol import A2AProtocol
 from labeeb.core.ai.mcp_protocol import MCPProtocol
@@ -45,10 +43,6 @@ class ScreenControlTool(BaseTool):
 
     def __init__(self, language_code: str = "en"):
         super().__init__(name=self.name, description=self.description)
-        self.platform_manager = PlatformManager()
-        self.platform_info = self.platform_manager.get_platform_info()
-        self.handlers = self.platform_manager.get_handlers()
-        self._configure_platform()
         self._setup_translations(language_code)
 
     def _log_protocol_action(self, protocol_name, action, details=None):
@@ -95,11 +89,26 @@ class ScreenControlTool(BaseTool):
         except Exception as e:
             logger.error(f"Error configuring platform: {str(e)}")
 
+    def _init_platform_manager(self):
+        from labeeb.core.platform_core.platform_manager import PlatformManager
+        self.platform_manager = PlatformManager()
+        self.platform_info = self.platform_manager.get_platform_info()
+        self.handlers = self.platform_manager.get_handlers()
+        self._configure_platform()
+
     async def get_screen_size(self) -> Dict[str, Any]:
         """Get screen size"""
         try:
             self._log_protocol_action("A2A", "get_screen_size")
             self._log_protocol_action("MCP", "get_screen_size")
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
             width, height = pyautogui.size()
             platform_name = (
                 self.platform_info.get("name") or self.platform_info.get("platform") or "unknown"
@@ -144,7 +153,14 @@ class ScreenControlTool(BaseTool):
                 "is_rtl": self.is_rtl,
             }
 
-            import pyautogui
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
 
             screenshot = pyautogui.screenshot(region=region)
             result["image"] = screenshot
@@ -186,6 +202,15 @@ class ScreenControlTool(BaseTool):
                 "is_rtl": self.is_rtl,
             }
 
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
+
             location = pyautogui.locateOnScreen(image_path, confidence=confidence)
             if location:
                 result["location"] = {
@@ -220,6 +245,14 @@ class ScreenControlTool(BaseTool):
         try:
             self._log_protocol_action("A2A", "check_screen_availability")
             self._log_protocol_action("MCP", "check_screen_availability")
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
             pyautogui.size()
             self._log_protocol_action(
                 "SmolAgents", "check_screen_availability", {"available": True}
@@ -276,3 +309,7 @@ class ScreenControlTool(BaseTool):
             return await self.locate_on_screen(image_path, confidence)
         else:
             return {"error": f"Unknown action: {action}"}
+
+    def some_method_that_needs_platform_manager(self):
+        self._init_platform_manager()
+        # ... use self.platform_manager, self.platform_info, self.handlers ...

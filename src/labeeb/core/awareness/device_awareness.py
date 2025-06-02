@@ -12,7 +12,14 @@ from platform_core.platform_manager import PlatformManager
 import logging
 from typing import Dict, List, Any, Optional
 import psutil
-import pyautogui
+try:
+    import pyautogui
+except ImportError:
+    raise RuntimeError("pyautogui is required for this feature. Please install it.")
+except Exception as e:
+    if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+        raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+    raise
 from labeeb.services.platform_services.common.platform_utils import get_platform_name
 
 
@@ -41,9 +48,9 @@ class DeviceAwarenessTool:
     def _setup_macos(self):
         """Setup device monitoring for macOS."""
         try:
-            from Foundation import NSWorkspace
+            import Foundation
 
-            self.ns_workspace = NSWorkspace
+            self.ns_workspace = Foundation.NSWorkspace
         except ImportError:
             self.logger.warning("NSWorkspace not available on macOS")
             self.ns_workspace = None
@@ -52,7 +59,6 @@ class DeviceAwarenessTool:
         """Setup device monitoring for Windows."""
         try:
             import win32com.client
-
             self.wmi = win32com.client.GetObject("winmgmts:")
         except ImportError:
             self.logger.warning("WMI not available on Windows")
@@ -135,7 +141,6 @@ class DeviceAwarenessTool:
         devices = []
         try:
             import pyaudio
-
             p = pyaudio.PyAudio()
             for i in range(p.get_device_count()):
                 device_info = p.get_device_info_by_index(i)
@@ -160,22 +165,25 @@ class DeviceAwarenessTool:
         devices = []
         try:
             # Get primary screen info
-            primary = pyautogui.size()
-            devices.append(
-                {
-                    "name": "Primary Display",
-                    "type": "screen",
-                    "width": primary.width,
-                    "height": primary.height,
-                    "platform": self.system,
-                }
-            )
+            try:
+                import pyautogui
+                primary = pyautogui.size()
+                devices.append(
+                    {
+                        "name": "Primary Display",
+                        "type": "screen",
+                        "width": primary.width,
+                        "height": primary.height,
+                        "platform": self.system,
+                    }
+                )
+            except Exception as e:
+                self.logger.error(f"Error getting primary screen: {str(e)}")
 
             # Try to get additional screens
             if self.system == "Darwin":
                 try:
                     import Quartz
-
                     displays = Quartz.CGGetActiveDisplayList(10, None, None)[1]
                     for i, display in enumerate(displays):
                         if i > 0:  # Skip primary display

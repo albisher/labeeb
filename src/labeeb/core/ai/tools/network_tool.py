@@ -9,7 +9,7 @@ import socket
 import requests
 import urllib.parse
 from typing import Any, Dict, Optional
-from .base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 
 
 class NetworkTool(BaseTool):
@@ -17,10 +17,9 @@ class NetworkTool(BaseTool):
 
     def __init__(self):
         """Initialize the NetworkTool."""
-        super().__init__(
-            name="NetworkTool",
-            description="Handles network operations including HTTP requests, DNS lookups, and connectivity checks",
-        )
+        super().__init__()
+        self.name = "NetworkTool"
+        self.description = "Handles network operations including HTTP requests, DNS lookups, and connectivity checks"
 
     async def execute(self, action: str, **kwargs) -> Dict[str, Any]:
         """
@@ -131,3 +130,22 @@ class NetworkTool(BaseTool):
             }
         except Exception as e:
             return self.handle_error(e)
+
+    def validate_config(self) -> bool:
+        return True
+
+    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        args = input_data.get('args', {})
+        if action == "http_request":
+            return self._http_request(**args)
+        elif action == "dns_lookup":
+            return self._dns_lookup(**args)
+        elif action == "check_connectivity":
+            return self._check_connectivity(**args)
+        elif action == "url_parse":
+            return self._url_parse(**args)
+        else:
+            return {"status": "error", "message": f"Unknown action: {action}"}

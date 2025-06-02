@@ -62,7 +62,12 @@ class MouseController:
 
     def _get_screen_size(self) -> Tuple[int, int]:
         """Get the screen dimensions."""
-        return pyautogui.size()
+        try:
+            return pyautogui.size()
+        except Exception as e:
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+            raise
 
     def _validate_coordinates(self, x: int, y: int) -> bool:
         """Validate that coordinates are within screen bounds."""

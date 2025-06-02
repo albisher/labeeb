@@ -9,13 +9,11 @@ This tool provides keyboard input functionality while following:
 
 import logging
 from typing import Dict, Any, List, Optional, Union
-import pyautogui
-from labeeb.core.ai.tool_base import BaseTool
 
 logger = logging.getLogger(__name__)
 
 
-class KeyboardInputTool(BaseTool):
+class KeyboardInputTool:
     """Tool for simulating keyboard input with platform-specific optimizations."""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
@@ -26,11 +24,6 @@ class KeyboardInputTool(BaseTool):
         """
         if config is None:
             config = {}
-        super().__init__(
-            name="keyboard_input",
-            description="Tool for simulating keyboard input with platform-specific optimizations",
-            config=config,
-        )
         self._typing_speed = config.get("typing_speed", 0.1)  # seconds between keystrokes
         self._key_press_delay = config.get("key_press_delay", 0.1)  # seconds to hold key
         self._last_key = None
@@ -43,9 +36,17 @@ class KeyboardInputTool(BaseTool):
         """
         try:
             # Configure PyAutoGUI
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
             pyautogui.FAILSAFE = True
             pyautogui.PAUSE = 0.1
-            return await super().initialize()
+            return True
         except Exception as e:
             logger.error(f"Failed to initialize KeyboardInputTool: {e}")
             return False
@@ -54,7 +55,6 @@ class KeyboardInputTool(BaseTool):
         """Clean up resources used by the tool."""
         try:
             self._last_key = None
-            await super().cleanup()
         except Exception as e:
             logger.error(f"Error cleaning up KeyboardInputTool: {e}")
 
@@ -64,15 +64,13 @@ class KeyboardInputTool(BaseTool):
         Returns:
             Dict[str, bool]: Dictionary of capability names and their availability
         """
-        base_capabilities = super().get_capabilities()
-        tool_capabilities = {
+        return {
             "type_text": True,
             "press_key": True,
             "hold_key": True,
             "release_key": True,
             "hotkey": True,
         }
-        return {**base_capabilities, **tool_capabilities}
 
     def get_status(self) -> Dict[str, Any]:
         """Get the current status of the tool.
@@ -80,13 +78,11 @@ class KeyboardInputTool(BaseTool):
         Returns:
             Dict[str, Any]: Dictionary containing status information
         """
-        base_status = super().get_status()
-        tool_status = {
+        return {
             "typing_speed": self._typing_speed,
             "key_press_delay": self._key_press_delay,
             "last_key": self._last_key,
         }
-        return {**base_status, **tool_status}
 
     async def _execute_command(
         self, command: str, args: Optional[Dict[str, Any]] = None
@@ -129,6 +125,14 @@ class KeyboardInputTool(BaseTool):
             text = args["text"]
             interval = args.get("interval", self._typing_speed)
 
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
             pyautogui.write(text, interval=interval)
 
             return {"status": "success", "action": "type", "text": text}
@@ -152,6 +156,14 @@ class KeyboardInputTool(BaseTool):
             key = args["key"]
             self._last_key = key
 
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
             pyautogui.press(key)
 
             return {"status": "success", "action": "press", "key": key}
@@ -175,6 +187,14 @@ class KeyboardInputTool(BaseTool):
             key = args["key"]
             self._last_key = key
 
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
             pyautogui.keyDown(key)
 
             return {"status": "success", "action": "hold", "key": key}
@@ -198,6 +218,14 @@ class KeyboardInputTool(BaseTool):
             key = args["key"]
             self._last_key = None
 
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
             pyautogui.keyUp(key)
 
             return {"status": "success", "action": "release", "key": key}
@@ -222,6 +250,14 @@ class KeyboardInputTool(BaseTool):
             if not isinstance(keys, (list, tuple)):
                 keys = [keys]
 
+            try:
+                import pyautogui
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
             pyautogui.hotkey(*keys)
 
             return {"status": "success", "action": "hotkey", "keys": keys}

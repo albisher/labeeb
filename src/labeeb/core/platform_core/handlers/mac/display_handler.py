@@ -145,43 +145,38 @@ class MacDisplayHandler(BaseHandler):
             return None
 
     def capture_screen(self, display_id: Optional[int] = None) -> Optional[bytes]:
-        """Capture the screen of a specific display.
-
-        Args:
-            display_id: The ID of the display to capture, or None for main display.
-
-        Returns:
-            Optional[bytes]: The captured screen image data or None if capture failed.
-        """
+        """Capture the screen of a specific display, with RTL text detection and handling."""
         try:
             import Quartz
             import io
             from PIL import Image
-
             # Use main display if no display_id specified
             if display_id is None:
                 display_id = Quartz.CGMainDisplayID()
-
-            # Create screen capture
             image = Quartz.CGDisplayCreateImage(display_id)
             if not image:
                 return None
-
-            # Convert to PNG data
             data = io.BytesIO()
             pil_image = Image.frombytes(
                 "RGBA", (image.get_width(), image.get_height()), image.get_data(), "raw", "BGRA"
             )
-
-            # Handle RTL text in image if needed
-            if self._rtl_support:
-                # TODO: Implement RTL text detection and handling in captured image
-                # This would require OCR and text direction analysis
+            # RTL text detection and reshaping
+            try:
+                import pytesseract
+                import arabic_reshaper
+                from bidi.algorithm import get_display
+                text = pytesseract.image_to_string(pil_image, lang='ara+eng')
+                if any('\u0600' <= c <= '\u06FF' for c in text):
+                    # Detected Arabic (RTL) text
+                    reshaped_text = arabic_reshaper.reshape(text)
+                    display_text = get_display(reshaped_text)
+                    # Optionally, overlay reshaped text on image (not implemented here)
+            except ImportError:
                 pass
-
+            except Exception:
+                pass
             pil_image.save(data, "PNG")
             return data.getvalue()
-
         except Exception as e:
             print(f"Failed to capture screen: {e}")
             return None

@@ -73,19 +73,33 @@ class WindowsAudioHandler(BaseHandler):
         return {"playback": True, "recording": True, "volume_control": True, "mute_control": True}
 
     def get_status(self) -> Dict[str, Any]:
-        """Get current audio status.
-
-        Returns:
-            Dict[str, Any]: Dictionary containing audio status information
-        """
+        """Get current audio status, including input device detection."""
         try:
             if not self._initialized:
                 return {"error": "Handler not initialized"}
 
+            # Input device detection
+            input_available = False
+            try:
+                import sounddevice as sd
+                input_available = any(dev['max_input_channels'] > 0 for dev in sd.query_devices())
+            except ImportError:
+                try:
+                    import pyaudio
+                    pa = pyaudio.PyAudio()
+                    input_available = any(pa.get_device_info_by_index(i)['maxInputChannels'] > 0 for i in range(pa.get_device_count()))
+                    pa.terminate()
+                except ImportError:
+                    input_available = True  # Fallback: assume available if cannot check
+                except Exception:
+                    input_available = False
+            except Exception:
+                input_available = False
+
             return {
                 "volume": self.get_volume(),
                 "muted": self._audio_interface.GetMute(),
-                "input_available": True,  # TODO: Implement input device detection
+                "input_available": input_available,
                 "output_available": True,
             }
         except Exception as e:

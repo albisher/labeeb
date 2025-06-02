@@ -17,7 +17,6 @@ alwaysApply: false
 
 import os
 import logging
-import pyautogui
 import pygetwindow as gw
 from typing import Dict, Any, Optional, Tuple
 from labeeb.core.config_manager import ConfigManager
@@ -33,8 +32,16 @@ class AutomationTool:
         self.config = ConfigManager()
         
         # Set up safety features
-        pyautogui.FAILSAFE = True  # Move mouse to corner to abort
-        pyautogui.PAUSE = 0.5      # Add delay between actions
+        try:
+            import pyautogui
+            pyautogui.FAILSAFE = True  # Move mouse to corner to abort
+            pyautogui.PAUSE = 0.5      # Add delay between actions
+        except ImportError:
+            raise RuntimeError("pyautogui is required for this feature. Please install it.")
+        except Exception as e:
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+            raise
         
         # Common application names
         self.app_names = {
@@ -65,6 +72,7 @@ class AutomationTool:
             Exception: If mouse movement fails
         """
         try:
+            import pyautogui
             pyautogui.moveTo(x, y, duration=0.5)
             return {"success": True}
         except Exception as e:
@@ -87,6 +95,7 @@ class AutomationTool:
             Exception: If click fails
         """
         try:
+            import pyautogui
             if x is not None and y is not None:
                 pyautogui.click(x, y)
             else:
@@ -111,6 +120,7 @@ class AutomationTool:
             Exception: If typing fails
         """
         try:
+            import pyautogui
             pyautogui.write(text)
             return {"success": True}
         except Exception as e:
@@ -132,6 +142,7 @@ class AutomationTool:
             Exception: If app opening fails
         """
         try:
+            import pyautogui
             # Get platform-specific app name
             platform = pyautogui.platform()
             app = self.app_names.get(app_name.lower(), {}).get(platform)
@@ -162,6 +173,7 @@ class AutomationTool:
             Exception: If window not found
         """
         try:
+            import pyautogui
             window = gw.getWindowsWithTitle(title)
             if not window:
                 raise ValueError(f"Window with title '{title}' not found")
@@ -187,6 +199,7 @@ class AutomationTool:
             Exception: If calculator operation fails
         """
         try:
+            import pyautogui
             # Open calculator
             self.open_app("calculator")
             
@@ -199,6 +212,7 @@ class AutomationTool:
             y = (screen_height - calc["size"][1]) // 2
             
             # Move window
+            import pygetwindow as gw
             window = gw.getWindowsWithTitle("Calculator")[0]
             window.moveTo(x, y)
             
@@ -222,6 +236,7 @@ class AutomationTool:
             Exception: If typing fails
         """
         try:
+            import pyautogui
             # Type each character with a small delay
             for char in expression:
                 if char == "*":
@@ -253,6 +268,7 @@ class AutomationTool:
             Exception: If operation fails
         """
         try:
+            import pyautogui
             pyautogui.press("enter")
             return {"success": True}
         except Exception as e:

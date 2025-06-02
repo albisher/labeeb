@@ -1,4 +1,3 @@
-import pyautogui
 from labeeb.core.ai.tool_base import BaseTool
 from labeeb.core.ai.a2a_protocol import A2AProtocol
 from labeeb.core.ai.mcp_protocol import MCPProtocol
@@ -30,7 +29,14 @@ class MouseTool(BaseTool, A2AProtocol, MCPProtocol, SmolAgentProtocol):
                 # Notify A2A protocol before action
                 await self.notify_action("mouse_move", {"x": x, "y": y})
                 # Execute the actual movement
-                pyautogui.moveTo(int(x), int(y))
+                try:
+                    import pyautogui
+                    pyautogui.moveTo(int(x), int(y))
+                except ImportError:
+                    raise RuntimeError("pyautogui is required for this feature. Please install it.")
+                except Exception as e:
+                    if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                        raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
                 # Notify SmolAgent protocol after action
                 await self.notify_completion("mouse_move", {"x": x, "y": y})
                 return {"status": "success", "action": "move", "x": x, "y": y}
@@ -43,7 +49,14 @@ class MouseTool(BaseTool, A2AProtocol, MCPProtocol, SmolAgentProtocol):
                 # Notify A2A protocol before action
                 await self.notify_action("mouse_click", {"count": count})
                 # Execute the actual click
-                pyautogui.click(clicks=int(count))
+                try:
+                    import pyautogui
+                    pyautogui.click(clicks=int(count))
+                except ImportError:
+                    raise RuntimeError("pyautogui is required for this feature. Please install it.")
+                except Exception as e:
+                    if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                        raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
                 # Notify SmolAgent protocol after action
                 await self.notify_completion("mouse_click", {"count": count})
                 return {"status": "success", "action": "click", "count": count}

@@ -136,9 +136,11 @@ class MacBrowserHandler(BaseHandler):
     def _initialize_rtl_support(self) -> None:
         """Initialize RTL language support."""
         try:
-            from ..platform_manager import platform_manager
-
-            self._rtl_support = platform_manager.rtl_support
+            # Get current platform
+            import platform
+            current_platform = platform.system()
+            # Initialize RTL support
+            self._rtl_support = current_platform in ["macos", "ubuntu", "windows"]
             self._text_direction = "rtl" if self._rtl_support else "ltr"
         except Exception as e:
             print(f"Failed to initialize RTL support: {e}")

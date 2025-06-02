@@ -1,4 +1,8 @@
-# Labeeb Agent Tools
+# Labeeb Tools Overview
+
+## Agent Tool Architecture Update (2024)
+
+All agent tools must now inherit from `BaseAgentTool`, defined in `src/labeeb/tools/base_tool.py`, following the project agent-tool separation and naming conventions. The legacy/duplicate `base_tool.py` in `core/ai/tools` has been removed. All imports and usages have been updated for compliance. See the project TODO for ongoing audit of agent tool compliance and documentation.
 
 ## Plan Logic
 Labeeb uses a robust, extensible plan decomposition logic that matches creative, human-like instructions (in English and Arabic) to the correct tool. Each tool is registered with a canonical name, and the agent uses pattern matching to select the appropriate tool for each task.

@@ -5,13 +5,12 @@ All platform-specific logic is delegated to PlatformManager (see platform_core/p
 A2A, MCP, SmolAgents compliant: This tool is minimal, composable, and delegates all platform-specific logic to PlatformManager.
 """
 
-from labeeb.core.ai.tools.base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 import subprocess
 import shlex
 import os
 import platform
 from typing import Dict, Any, Optional, List
-from labeeb.core.platform_core.platform_manager import PlatformManager
 from labeeb.core.exceptions import CommandError, SecurityError
 import arabic_reshaper
 from bidi.algorithm import get_display
@@ -27,13 +26,13 @@ class ShellTool(BaseTool):
         debug: bool = False,
     ):
         """Initialize the shell tool with safety features."""
-        super().__init__(
-            name="shell",
-            description={
-                "en": "Execute shell commands with safety checks and platform-specific optimizations",
-                "ar": "تنفيذ أوامر الشل مع فحوصات الأمان وتحسينات خاصة بالمنصة",
-            },
-        )
+        from labeeb.core.platform_core.platform_manager import PlatformManager
+        super().__init__()
+        self.name = "shell"
+        self.description = {
+            "en": "Execute shell commands with safety checks and platform-specific optimizations",
+            "ar": "تنفيذ أوامر الشل مع فحوصات الأمان وتحسينات خاصة بالمنصة",
+        }
         self.safe_mode = safe_mode
         self.enable_dangerous_command_check = enable_dangerous_command_check
         self.debug = debug
@@ -207,3 +206,24 @@ class ShellTool(BaseTool):
             "list_usb": "List connected USB devices",
             "browser_content": "Get browser content",
         }
+
+    def validate_config(self) -> bool:
+        return True
+
+    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        args = input_data.get('args', {})
+        if action == "execute":
+            return self.execute(action, **args)
+        elif action == "safety_check":
+            return self.execute(action, **args)
+        elif action == "detect_target":
+            return self.execute(action, **args)
+        elif action == "list_usb":
+            return self.execute(action, **args)
+        elif action == "browser_content":
+            return self.execute(action, **args)
+        else:
+            return {"status": "error", "message": f"Unknown action: {action}"}

@@ -1,7 +1,6 @@
 import logging
 from typing import Dict, Any, List, Optional, Union
-from labeeb.core.ai.tools.base_tool import BaseTool
-from labeeb.core.platform_core.platform_manager import PlatformManager
+from labeeb.tools.base_tool import BaseTool
 
 logger = logging.getLogger(__name__)
 
@@ -15,10 +14,9 @@ class ClipboardTool(BaseTool):
         Args:
             config: Optional configuration dictionary
         """
-        super().__init__(
-            name="clipboard_tool",
-            description="Tool for managing clipboard operations with platform-specific optimizations.",
-        )
+        super().__init__()
+        self.name = "clipboard_tool"
+        self.description = "Tool for managing clipboard operations with platform-specific optimizations."
         if config is None:
             config = {}
         self._platform_manager = None
@@ -36,6 +34,7 @@ class ClipboardTool(BaseTool):
             bool: True if initialization was successful, False otherwise
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             self._platform_manager = PlatformManager()
             self._platform_info = self._platform_manager.get_platform_info()
             self._handlers = self._platform_manager.get_handlers()
@@ -54,6 +53,7 @@ class ClipboardTool(BaseTool):
     def cleanup(self) -> None:
         """Clean up resources used by the tool."""
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             if self._clear_on_exit:
                 self._clipboard_handler.clear()
             self._platform_manager = None
@@ -250,6 +250,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             text = args["text"]
             if len(text) > self._max_text_length:
                 return {"error": f"Text length exceeds maximum allowed ({self._max_text_length})"}
@@ -267,6 +268,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             text = self._clipboard_handler.get_text()
             return {
                 "status": "success",
@@ -288,6 +290,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             html = args["html"]
             if len(html) > self._max_text_length:
                 return {"error": f"HTML length exceeds maximum allowed ({self._max_text_length})"}
@@ -305,6 +308,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             html = self._clipboard_handler.get_html()
             return {
                 "status": "success",
@@ -326,6 +330,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             rtf = args["rtf"]
             if len(rtf) > self._max_text_length:
                 return {"error": f"RTF length exceeds maximum allowed ({self._max_text_length})"}
@@ -343,6 +348,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             rtf = self._clipboard_handler.get_rtf()
             return {
                 "status": "success",
@@ -364,6 +370,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             image_data = args["image_data"]
             self._clipboard_handler.set_image(image_data)
             return {"status": "success", "action": "set_image", "size": len(image_data)}
@@ -378,6 +385,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             image_data = self._clipboard_handler.get_image()
             return {
                 "status": "success",
@@ -399,6 +407,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             files = args["files"]
             self._clipboard_handler.set_files(files)
             return {"status": "success", "action": "set_files", "count": len(files)}
@@ -413,6 +422,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             files = self._clipboard_handler.get_files()
             return {"status": "success", "action": "get_files", "files": files, "count": len(files)}
         except Exception as e:
@@ -426,6 +436,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             self._clipboard_handler.clear()
             return {"status": "success", "action": "clear"}
         except Exception as e:
@@ -439,6 +450,7 @@ class ClipboardTool(BaseTool):
             Dict[str, Any]: Result of the operation
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             formats = self._clipboard_handler.get_formats()
             return {"status": "success", "action": "get_formats", "formats": formats}
         except Exception as e:
@@ -475,3 +487,38 @@ class ClipboardTool(BaseTool):
             return self._clear()
         else:
             return {"error": f"Unknown action: {action}"}
+
+    def validate_config(self) -> bool:
+        return True
+
+    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        args = input_data.get('args', {})
+        if action == "set_text":
+            return self._set_text(args)
+        elif action == "get_text":
+            return self._get_text()
+        elif action == "set_html":
+            return self._set_html(args)
+        elif action == "get_html":
+            return self._get_html()
+        elif action == "set_rtf":
+            return self._set_rtf(args)
+        elif action == "get_rtf":
+            return self._get_rtf()
+        elif action == "set_image":
+            return self._set_image(args)
+        elif action == "get_image":
+            return self._get_image()
+        elif action == "set_files":
+            return self._set_files(args)
+        elif action == "get_files":
+            return self._get_files()
+        elif action == "clear":
+            return self._clear()
+        elif action == "get_formats":
+            return self._get_formats()
+        else:
+            return {"status": "error", "message": f"Unknown action: {action}"}

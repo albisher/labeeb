@@ -8,11 +8,11 @@ This module implements the main Labeeb agent class.
 
 import logging
 from typing import Dict, Any, List
-from labeeb.platform_core.platform_manager import PlatformManager
 from labeeb.core.ai.agents.base_agent import BaseAgent
 from labeeb.core.ai.a2a_protocol import A2AProtocol
 from labeeb.core.ai.mcp_protocol import MCPProtocol
 from labeeb.core.ai.smol_agent import SmolAgentProtocol
+from labeeb.tools.base_tool import BaseAgentTool
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +26,16 @@ class LabeebAgent(BaseAgent, A2AProtocol, MCPProtocol, SmolAgentProtocol):
     def __init__(self, name: str = "Labeeb"):
         super().__init__()
         self.name = name
+
+    async def initialize(self) -> None:
+        """Initialize the agent with platform-specific settings"""
+        from labeeb.core.platform_core.platform_manager import PlatformManager
         self.platform_manager = PlatformManager()
         self.platform_info = self.platform_manager.get_platform_info()
         self.handlers = self.platform_manager.get_handlers()
         self.a2a_protocol = A2AProtocol()
         self.mcp_protocol = MCPProtocol()
         self.smol_protocol = SmolAgentProtocol()
-
-    async def initialize(self) -> None:
-        """Initialize the agent with platform-specific settings"""
         try:
             # Notify A2A protocol before initialization
             await self.a2a_protocol.notify_action("initialize", {"name": self.name})

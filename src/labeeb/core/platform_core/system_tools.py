@@ -9,7 +9,14 @@ from labeeb.services.platform_services.common.platform_utils import get_platform
 import os
 import platform
 import subprocess
-import pyautogui
+try:
+    import pyautogui
+except ImportError:
+    raise RuntimeError("pyautogui is required for this feature. Please install it.")
+except Exception as e:
+    if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+        raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+    raise
 import psutil
 from datetime import datetime
 from typing import Dict, Any

@@ -8,7 +8,7 @@ implementing A2A (Agent-to-Agent), MCP (Model Context Protocol), and SmolAgents 
 import requests
 from bs4 import BeautifulSoup
 from typing import Any, Dict, Optional
-from .base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 
 
 class WebTool(BaseTool):
@@ -16,10 +16,9 @@ class WebTool(BaseTool):
 
     def __init__(self):
         """Initialize the WebTool."""
-        super().__init__(
-            name="WebTool",
-            description="Handles web-related operations including web scraping, content extraction, and URL validation",
-        )
+        super().__init__()
+        self.name = "WebTool"
+        self.description = "Handles web-related operations including web scraping, content extraction, and URL validation"
 
     async def execute(self, action: str, **kwargs) -> Dict[str, Any]:
         """
@@ -147,3 +146,22 @@ class WebTool(BaseTool):
             }
         except Exception as e:
             return self.handle_error(e)
+
+    def validate_config(self) -> bool:
+        return True
+
+    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        args = input_data.get('args', {})
+        if action == "fetch_url":
+            return self._fetch_url(**args)
+        elif action == "extract_content":
+            return self._extract_content(**args)
+        elif action == "validate_url":
+            return self._validate_url(**args)
+        elif action == "search_web":
+            return self._search_web(**args)
+        else:
+            return {"status": "error", "message": f"Unknown action: {action}"}

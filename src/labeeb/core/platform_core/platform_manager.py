@@ -20,9 +20,6 @@ import os
 import logging
 from typing import Dict, Any, Optional, List, Type, ClassVar
 from labeeb.core.platform_core.handlers.base_handler import BaseHandler
-from labeeb.core.platform_core.handlers.mac.input_handler import MacInputHandler
-from labeeb.core.platform_core.handlers.mac.audio_handler import MacAudioHandler
-from labeeb.core.platform_core.handlers.mac.usb_handler import MacUSBHandler
 from labeeb.services.platform_services.common.system_info import BaseSystemInfoGatherer
 from .browser_handler import BaseBrowserHandler
 from .i18n import gettext as _, is_rtl, get_current_language, setup_language
@@ -88,20 +85,20 @@ class PlatformManager:
                 self.os_identifier = get_os_identifier()
                 self.platform_name = get_platform_name()
                 self.handlers: Dict[str, BaseHandler] = {}
-        self._config: Dict[str, Any] = {}
-        self._initialized = False
-        
-        # Initialize language and RTL support
-        self.current_language = get_current_language()
-        self.rtl_support = is_rtl(self.current_language)
-        setup_language(self.current_language)
-        
-        # Lazy load platform-specific modules
+                self._config: Dict[str, Any] = {}
+                self._initialized = False
+
+                # Initialize language and RTL support
+                self.current_language = get_current_language()
+                self.rtl_support = is_rtl(self.current_language)
+                setup_language(self.current_language)
+
+                # Lazy load platform-specific modules
                 self._load_platform_modules()
-                
+
                 # Initialize the manager
                 self.initialize()
-                
+
                 logger.info(f"Platform manager initialized for platform: {self.platform_name}")
             except Exception as e:
                 logger.error(f"Failed to initialize platform manager: {e}")
@@ -111,21 +108,28 @@ class PlatformManager:
         """Load platform-specific modules based on the current platform."""
         try:
             if self.platform_name == "macos":
-            from .mac.system_info import MacSystemInfoGatherer
+                from .mac.system_info import MacSystemInfoGatherer
                 from .handlers.mac.shell_handler import MacShellHandler
                 from .handlers.mac.browser_handler import MacBrowserHandler
-
+                from .handlers.mac.input_handler import MacInputHandler
+                from .handlers.mac.audio_handler import MacAudioHandler
+                from .handlers.mac.usb_handler import MacUSBHandler
                 self._system_info_gatherers["macos"] = MacSystemInfoGatherer
                 self._shell_handlers["macos"] = MacShellHandler
                 self._browser_handlers["macos"] = MacBrowserHandler
+                self._mac_input_handler = MacInputHandler
+                self._mac_audio_handler = MacAudioHandler
+                self._mac_usb_handler = MacUSBHandler
             elif self.platform_name == "windows":
-            from .windows.system_info import WindowsSystemInfoGatherer
+                from .windows.system_info import WindowsSystemInfoGatherer
                 self._system_info_gatherers["windows"] = WindowsSystemInfoGatherer
             elif self.platform_name == "linux":
-            from .ubuntu.system_info import UbuntuSystemInfoGatherer
-            from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
+                from .ubuntu.system_info import UbuntuSystemInfoGatherer
+                from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
+                from labeeb.core.platform_core.handlers.linux.browser_handler import LinuxBrowserHandler
                 self._system_info_gatherers["linux"] = UbuntuSystemInfoGatherer
                 self._shell_handlers["linux"] = LinuxShellHandler
+                self._browser_handlers["linux"] = LinuxBrowserHandler
             else:
                 logger.warning(f"Unsupported platform: {self.platform_name}")
         except ImportError as e:
@@ -182,40 +186,44 @@ class PlatformManager:
         """Initialize platform-specific handlers."""
         try:
             if self.platform_name == "macos":
-            from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
-            handler_map: Dict[str, Type[BaseHandler]] = {
-                "input": MacInputHandler,
-                "audio": MacAudioHandler,
-                "display": MacDisplayHandler,
-                "usb": MacUSBHandler,
+                from labeeb.core.platform_core.handlers.mac.display_handler import MacDisplayHandler
+                from labeeb.core.platform_core.handlers.mac.input_handler import MacInputHandler
+                from labeeb.core.platform_core.handlers.mac.audio_handler import MacAudioHandler
+                from labeeb.core.platform_core.handlers.mac.usb_handler import MacUSBHandler
+                handler_map: Dict[str, Type[BaseHandler]] = {
+                    "input": MacInputHandler,
+                    "audio": MacAudioHandler,
+                    "display": MacDisplayHandler,
+                    "usb": MacUSBHandler,
                     "shell": self._shell_handlers["macos"],
                     "browser": self._browser_handlers["macos"],
-            }
+                }
             elif self.platform_name == "linux":
-            from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
-            handler_map: Dict[str, Type[BaseHandler]] = {
-                "shell": LinuxShellHandler,
-            }
-        else:
-            handler_map: Dict[str, Type[BaseHandler]] = {}
+                from labeeb.core.platform_core.handlers.linux.shell_handler import LinuxShellHandler
+                from labeeb.core.platform_core.handlers.linux.browser_handler import LinuxBrowserHandler
+                handler_map: Dict[str, Type[BaseHandler]] = {
+                    "shell": LinuxShellHandler,
+                    "browser": LinuxBrowserHandler,
+                }
+            else:
+                handler_map: Dict[str, Type[BaseHandler]] = {}
 
-        # Initialize each handler
-        for handler_type, handler_class in handler_map.items():
-            if handler_class is None:
+            # Initialize each handler
+            for handler_type, handler_class in handler_map.items():
+                if handler_class is None:
                     logger.warning(f"{handler_type} handler class is None")
-                continue
-            try:
-                handler = handler_class(self._config.get(handler_type, {}))
-                if handler.initialize():
-                    self.handlers[handler_type] = handler
+                    continue
+                try:
+                    handler = handler_class(self._config.get(handler_type, {}))
+                    if handler.initialize():
+                        self.handlers[handler_type] = handler
                         logger.info(f"Successfully initialized {handler_type} handler")
-                else:
+                    else:
                         logger.warning(f"{handler_type} handler initialization failed")
                 except Exception as e:
                     logger.error(f"Error initializing {handler_type} handler: {e}")
-            
             logger.info(f"Handlers after initialization: {list(self.handlers.keys())}")
-            except Exception as e:
+        except Exception as e:
             logger.error(f"Failed to initialize handlers: {e}")
             raise
     
@@ -399,10 +407,6 @@ class PlatformManager:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
-
-
-# Create the singleton instance
-platform_manager = PlatformManager.get_instance()
 
 
 def get_platform_system_info_gatherer() -> Optional[BaseSystemInfoGatherer]:

@@ -19,9 +19,8 @@ import json
 import tempfile
 import time
 import re
-import pyautogui
 from typing import Dict, Any, List, Optional
-from ...utils import run_command
+from labeeb.core.utils import run_command
 import arabic_reshaper
 from bidi.algorithm import get_display
 from labeeb.services.platform_services.common.platform_utils import get_platform_name
@@ -116,16 +115,24 @@ class BaseBrowserHandler:
             time.sleep(wait_time)
 
             # Try to find the search bar visually
-            pyautogui.hotkey("ctrl", "l")  # Focus address bar
-            time.sleep(0.2)
-            pyautogui.typewrite(url)
-            pyautogui.press("enter")
-            time.sleep(wait_time)
+            try:
+                import pyautogui
+                pyautogui.hotkey("ctrl", "l")  # Focus address bar
+                time.sleep(0.2)
+                pyautogui.typewrite(url)
+                pyautogui.press("enter")
+                time.sleep(wait_time)
 
-            # For Google, the search bar is focused by default, so type the query
-            pyautogui.typewrite(query)
-            pyautogui.press("enter")
-            return f"Opened {url} and searched for '{query}'."
+                # For Google, the search bar is focused by default, so type the query
+                pyautogui.typewrite(query)
+                pyautogui.press("enter")
+                return f"Opened {url} and searched for '{query}'."
+            except ImportError:
+                raise RuntimeError("pyautogui is required for this feature. Please install it.")
+            except Exception as e:
+                if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                    raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+                raise
         except Exception as e:
             return f"Error performing browser search: {str(e)}"
 

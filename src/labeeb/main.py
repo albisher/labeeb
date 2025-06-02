@@ -22,6 +22,7 @@ import asyncio
 import arabic_reshaper
 from bidi.algorithm import get_display
 from labeeb.services.platform_services.common.platform_utils import get_platform_name
+from labeeb.services.platform_services.common import platform_utils
 
 # Add src directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -31,7 +32,6 @@ sys.path.insert(0, project_root)
 from labeeb.core.logging_config import setup_logging, get_logger
 from labeeb.core.exceptions import LabeebError, AIError, ConfigurationError, CommandError
 from labeeb.core.cache_manager import CacheManager
-from labeeb.core.platform_core.platform_manager import PlatformManager
 from labeeb.core.command_processor.command_processor import CommandProcessor
 from labeeb.core.shell_handler import ShellHandler
 from labeeb.core.ai_handler import AIHandler
@@ -55,6 +55,11 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", category=urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings("ignore", category=urllib3.exceptions.NotOpenSSLWarning)
 urllib3.disable_warnings()
+
+try:
+    from Xlib.error import DisplayConnectionError
+except ImportError:
+    DisplayConnectionError = None
 
 
 class Labeeb:
@@ -86,6 +91,7 @@ class Labeeb:
             fast_mode: Boolean to enable fast mode (minimal prompts, quick exit)
         """
         try:
+            from labeeb.core.platform_core.platform_manager import PlatformManager
             self.mode = mode
             self.fast_mode = fast_mode
             self.debug = debug
@@ -133,7 +139,7 @@ class Labeeb:
             ollama_base_url = self.config.get("ollama_base_url", "http://localhost:11434")
 
             # --- Automated Ollama model selection ---
-            default_model = self.config.get("default_ollama_model", "gemma:2b")
+            default_model = self.config.get("default_ollama_model", "gemma3:4b")
             selected_model = default_model
             if model_type == "ollama":
                 ok, tags_json = check_ollama_server()
@@ -141,13 +147,10 @@ class Labeeb:
                     ok, selected_model = check_model_available(tags_json, default_model)
                     if ok:
                         print(f"[Labeeb] Using Ollama model: {selected_model}")
-                        # Update the config with the selected model
-                        if self.update_config(selected_model):
-                            self.config["default_ollama_model"] = selected_model
-                        else:
-                            print(
-                                "[Labeeb] Warning: Failed to update configuration with selected model"
-                            )
+                        # Always update config with the selected model
+                        self.config["default_ollama_model"] = selected_model
+                        with open(os.path.join(self.base_dir, "config", "settings.json"), "w", encoding="utf-8") as f:
+                            json.dump(self.config, f, indent=2)
                     else:
                         print("[Labeeb] No available Ollama model found. Exiting.")
                         raise RuntimeError("No available Ollama model found.")
@@ -158,8 +161,6 @@ class Labeeb:
             config_manager = ConfigManager()
             config_manager.set("default_ollama_model", selected_model)
             config_manager.set("ollama_base_url", ollama_base_url)
-            config_manager.set("arabic_support", self.arabic_support)
-            config_manager.set("rtl_support", self.rtl_support)
 
             self.ai_handler = AIHandler(model_manager=ModelManager(config_manager))
 
@@ -419,6 +420,15 @@ Type 'help' for available commands or ask me anything!
         try:
             result = self.command_processor.process_command(command)
             return result
+        except Exception as e:
+            # Handle display connection errors gracefully
+            if DisplayConnectionError and isinstance(e, DisplayConnectionError):
+                return ("[Labeeb] GUI/display features are not available in this environment. "
+                        "Please run in a graphical session for screenshot, mouse, or clipboard commands.")
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                return ("[Labeeb] GUI/display features are not available in this environment. "
+                        "Please run in a graphical session for screenshot, mouse, or clipboard commands.")
+            raise
         finally:
             self.cleanup()
 
@@ -445,8 +455,20 @@ Type 'help' for available commands or ask me anything!
             ]
             for request in requests:
                 output.box(f"🤖 Processing your request: '{request}'", "Request")
-                response = self.command_processor.process_command(request)
-                output.info(response)
+                try:
+                    response = self.command_processor.process_command(request)
+                    output.info(response)
+                except Exception as e:
+                    # Handle display connection errors gracefully
+                    if DisplayConnectionError and isinstance(e, DisplayConnectionError):
+                        output.error("[Labeeb] GUI/display features are not available in this environment. "
+                                     "Please run in a graphical session for screenshot, mouse, or clipboard commands.")
+                        continue
+                    if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                        output.error("[Labeeb] GUI/display features are not available in this environment. "
+                                     "Please run in a graphical session for screenshot, mouse, or clipboard commands.")
+                        continue
+                    output.error(f"Error processing request: {str(e)}")
         except Exception as e:
             logger.error(f"Error processing test requests: {str(e)}")
             raise
@@ -608,7 +630,7 @@ async def process_command_and_log(command: str):
     """Process a command and log its execution."""
     try:
         start_time = datetime.now()
-        response = await process_command(command)
+        response = await labeeb.command_processor.process_command(command)
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
 

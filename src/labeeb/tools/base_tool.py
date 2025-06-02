@@ -222,3 +222,52 @@ class BaseTool(ABC):
             "status": "success",
             "data": data
         }
+
+class BaseAgentTool(BaseTool):
+    """Abstract base class for all agent tools, following agent-tool conventions."""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        super().__init__()
+        self.config = config or {}
+        self.name = self.__class__.__name__
+        self.description = getattr(self, 'description', 'Agent tool base class')
+
+    @abstractmethod
+    def execute(self, command: str, args: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Execute an agent tool command. Must be implemented by subclasses."""
+        pass
+
+    @abstractmethod
+    def get_available_commands(self) -> List[str]:
+        """Return a list of available commands for this agent tool."""
+        pass
+
+    @abstractmethod
+    def validate_command(self, command: str, args: Optional[Dict[str, Any]] = None) -> bool:
+        """Validate if the command and arguments are supported by this tool."""
+        pass
+
+    @abstractmethod
+    def get_command_help(self, command: str) -> Dict[str, Any]:
+        """Return help information for a specific command."""
+        pass
+
+    @abstractmethod
+    def initialize(self) -> bool:
+        """Initialize the agent tool. Return True if successful."""
+        pass
+
+    @abstractmethod
+    def cleanup(self) -> None:
+        """Clean up any resources used by the agent tool."""
+        pass
+
+    @abstractmethod
+    def get_capabilities(self) -> Dict[str, bool]:
+        """Return a dictionary of the tool's capabilities."""
+        pass
+
+    @abstractmethod
+    def get_status(self) -> Dict[str, Any]:
+        """Return the current status of the tool."""
+        pass

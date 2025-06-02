@@ -6,13 +6,13 @@ It monitors and analyzes system resources, performance metrics, and platform-spe
 capabilities to optimize Labeeb's operation and resource usage.
 """
 
+import platform
 # Deprecated stub for backward compatibility
 from platform_core.platform_manager import PlatformManager
 
 import os
 import socket
 import datetime
-import pyautogui
 import psutil
 from typing import List, Tuple, Dict, Optional, Any
 from labeeb.services.platform_services.common.platform_utils import get_platform_name, is_mac, is_windows, is_linux
@@ -50,19 +50,40 @@ class SystemAwarenessTool:
 
     def get_mouse_position(self) -> Tuple[int, int]:
         """Return the current mouse position as (x, y)."""
-        return pyautogui.position()
+        try:
+            import pyautogui
+            return pyautogui.position()
+        except ImportError:
+            raise RuntimeError("pyautogui is required for this feature. Please install it.")
+        except Exception as e:
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+            raise
 
     def get_screen_size(self) -> Tuple[int, int]:
         """Return the primary screen size as (width, height)."""
-        return pyautogui.size()
+        try:
+            import pyautogui
+            return pyautogui.size()
+        except ImportError:
+            raise RuntimeError("pyautogui is required for this feature. Please install it.")
+        except Exception as e:
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+            raise
 
     def get_mouse_info(self) -> Dict[str, Any]:
         """Return mouse position and pixel color under the cursor."""
-        pos = pyautogui.position()
         try:
+            import pyautogui
+            pos = pyautogui.position()
             color = pyautogui.screenshot().getpixel(pos)
-        except Exception:
-            color = None
+        except ImportError:
+            raise RuntimeError("pyautogui is required for this feature. Please install it.")
+        except Exception as e:
+            if 'DISPLAY' in str(e) or 'Xlib.error.DisplayConnectionError' in str(e):
+                raise RuntimeError("GUI/display features are not available in this environment. Please run in a graphical session.")
+            raise
         return {"position": pos, "color": color}
 
     def get_system_info(self) -> Dict[str, Any]:

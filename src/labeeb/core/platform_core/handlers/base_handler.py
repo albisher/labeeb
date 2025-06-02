@@ -5,6 +5,8 @@ This module provides a base class for all platform-specific handlers,
 ensuring consistent interface and proper isolation.
 
 Supports RTL languages (Arabic, Hebrew, etc.) with proper text reshaping and display.
+
+WARNING: Do NOT import platform_manager at the module level. Always import it inside methods to avoid circular import issues.
 """
 
 import os
@@ -76,11 +78,8 @@ class BaseHandler(Generic[T]):
             bool: True if the platform is valid, False otherwise.
         """
         try:
-            # Move import here to avoid circular import
-            from ..platform_manager import platform_manager
-
             # Get current platform
-            current_platform = platform_manager.get_platform()
+            current_platform = platform.system()
 
             # Get handler platform from class name
             handler_platform = self.__class__.__name__.lower()
@@ -110,10 +109,11 @@ class BaseHandler(Generic[T]):
     def _initialize_rtl_support(self) -> None:
         """Initialize RTL language support."""
         try:
-            # Move import here to avoid circular import
-            from ..platform_manager import platform_manager
+            # Get current platform
+            current_platform = platform.system()
 
-            self._rtl_support = platform_manager.rtl_support
+            # Initialize RTL support
+            self._rtl_support = current_platform in ["macos", "ubuntu", "windows"]
         except Exception as e:
             print(f"Failed to initialize RTL support: {e}")
             self._rtl_support = False

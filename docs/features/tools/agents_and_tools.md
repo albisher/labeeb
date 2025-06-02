@@ -1,5 +1,13 @@
 # Agents and Tools in Labeeb
 
+## Agent Tool Architecture Update (2024)
+
+All agent tools must now inherit from `BaseAgentTool`, defined in `src/labeeb/tools/base_tool.py`, following the project agent-tool separation and naming conventions. The legacy/duplicate `base_tool.py` in `core/ai/tools` has been removed. All imports and usages have been updated for compliance. See the project TODO for ongoing audit of agent tool compliance and documentation.
+
+**Distinction:**
+- **Tools**: Atomic, single-purpose, technical operations (see `BaseTool`).
+- **Agent Tools**: Agent-facing, orchestratable, and stateful tools for agent workflows (see `BaseAgentTool`).
+
 ## Agents
 | Name         | Location                                 | Specialty/Role                                                                 |
 |--------------|------------------------------------------|-------------------------------------------------------------------------------|

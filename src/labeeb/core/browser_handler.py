@@ -6,7 +6,6 @@ Following handler-architecture.mdc: single responsibility, clear interfaces, and
 
 import logging
 from typing import Optional, Dict, Any, List
-from labeeb.core.platform_core.platform_manager import platform_manager
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,8 @@ class BrowserHandler:
         Args:
             shell_handler: Optional shell handler instance for executing commands
         """
-        # Get platform-specific browser handler from singleton instance
+        from labeeb.core.platform_core.platform_manager import PlatformManager
+        platform_manager = PlatformManager()
         self._platform_handler = platform_manager.get_handler("browser")
 
         if self._platform_handler is None:

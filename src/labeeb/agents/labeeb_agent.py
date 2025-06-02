@@ -8,7 +8,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from .base_agent import BaseAgent
-from ..tools.base_tool import BaseAgentTool
+from labeeb.tools.base_tool import BaseAgentTool
 from ..platform_core.ui_interface import UIInterface
 from ..platform_core.net_interface import NetInterface
 from ..platform_core.fs_interface import FSInterface

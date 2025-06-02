@@ -7,7 +7,7 @@ This module provides functionality for file operations.
 import os
 import logging
 from typing import Dict, Any, Optional, List
-from .base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 from .tool_registry import ToolRegistry
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,9 @@ class FileTool(BaseTool):
 
     def __init__(self):
         """Initialize the file tool."""
-        super().__init__(name="file", description="Tool for file operations")
+        super().__init__()
+        self.name = "file"
+        self.description = "Tool for file operations"
 
     def create_file(self, path: str, content: str) -> bool:
         """Create a file with the given content.
@@ -350,3 +352,52 @@ class FileTool(BaseTool):
             return {"success": success, "path": path}
         else:
             return {"error": f"Unknown action: {action}"}
+
+    def validate_config(self) -> bool:
+        """Validate the tool configuration. For now, always returns True."""
+        return True
+
+    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Dispatch to the correct file operation based on input_data['action']."""
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        args = input_data.get('args', {})
+        # Map action to method
+        if action == "create_file":
+            path = args.get("path")
+            content = args.get("content", "")
+            if not path:
+                return {"status": "error", "message": "No path provided"}
+            success = self.create_file(path, content)
+            return {"status": "success" if success else "error", "path": path}
+        elif action == "read_file":
+            path = args.get("path")
+            if not path:
+                return {"status": "error", "message": "No path provided"}
+            content = self.read_file(path)
+            return {"status": "success", "content": content, "path": path}
+        elif action == "delete_file":
+            path = args.get("path")
+            if not path:
+                return {"status": "error", "message": "No path provided"}
+            success = self.delete_file(path)
+            return {"status": "success" if success else "error", "path": path}
+        elif action == "list_files":
+            directory = args.get("directory", ".")
+            files = self.list_files(directory)
+            return {"status": "success", "files": files, "directory": directory}
+        elif action == "create_directory":
+            path = args.get("path")
+            if not path:
+                return {"status": "error", "message": "No path provided"}
+            success = self.create_directory(path)
+            return {"status": "success" if success else "error", "path": path}
+        elif action == "delete_directory":
+            path = args.get("path")
+            if not path:
+                return {"status": "error", "message": "No path provided"}
+            success = self.delete_directory(path)
+            return {"status": "success" if success else "error", "path": path}
+        else:
+            return {"status": "error", "message": f"Unknown action: {action}"}

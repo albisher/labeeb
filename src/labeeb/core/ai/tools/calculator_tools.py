@@ -1,19 +1,17 @@
-import pyautogui
 import time
 from typing import Dict, Any, Tuple
 import platform
 import subprocess
-from .base_tool import BaseTool
+from labeeb.tools.base_tool import BaseTool
 
 
 class CalculatorTool(BaseTool):
     """Tool for automating calculator operations."""
 
-    name = "calculator"
-    description = "Automate calculator operations including mouse movements and keyboard inputs"
-
     def __init__(self):
-        super().__init__(name=self.name, description=self.description)
+        super().__init__()
+        self.name = "calculator"
+        self.description = "Automate calculator operations including mouse movements and keyboard inputs"
         self.calculator_positions = {
             "clear": (100, 200),  # Example coordinates, will be updated
             "input_area": (150, 300),
@@ -118,6 +116,7 @@ class CalculatorTool(BaseTool):
     async def move_and_click(self, x: int, y: int) -> Dict[str, Any]:
         """Move mouse to position and click."""
         try:
+            import pyautogui
             pyautogui.moveTo(x, y, duration=0.5)
             pyautogui.click()
             return {"success": True}
@@ -133,6 +132,7 @@ class CalculatorTool(BaseTool):
     async def type_number(self, number: str) -> Dict[str, Any]:
         """Type a number using keyboard."""
         try:
+            import pyautogui
             pyautogui.write(number)
             return {"success": True}
         except Exception as e:
@@ -141,6 +141,7 @@ class CalculatorTool(BaseTool):
     async def press_enter(self) -> Dict[str, Any]:
         """Press enter key."""
         try:
+            import pyautogui
             pyautogui.press("enter")
             return {"success": True}
         except Exception as e:
@@ -150,3 +151,17 @@ class CalculatorTool(BaseTool):
         """Get the calculator result using OCR (to be implemented)."""
         # TODO: Implement OCR to read calculator result
         return {"success": True, "result": "Result will be implemented with OCR"}
+
+    def validate_config(self) -> bool:
+        return True
+
+    def _execute_tool(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        action = input_data.get('action')
+        if not action:
+            return {"status": "error", "message": "No action provided"}
+        args = input_data.get('args', {})
+        # Only open_calculator is sync, others are async
+        if action == "open":
+            return self.open_calculator()
+        else:
+            return {"status": "error", "message": f"Action '{action}' requires async execution"}

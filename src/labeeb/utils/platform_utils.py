@@ -21,8 +21,8 @@ from typing import List, Optional
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def ensure_labeeb_directories() -> None:
-    """Ensure all required Labeeb directories exist."""
+def ensure_labeeb_directories() -> Path:
+    """Ensure all required Labeeb directories exist and return the base directory."""
     try:
         # Get the base directory
         base_dir = get_labeeb_base_dir()
@@ -41,6 +41,7 @@ def ensure_labeeb_directories() -> None:
             dir_path.mkdir(parents=True, exist_ok=True)
             logger.debug(f"Ensured directory exists: {dir_path}")
             
+        return base_dir
     except Exception as e:
         logger.error(f"Error ensuring Labeeb directories: {str(e)}")
         raise
