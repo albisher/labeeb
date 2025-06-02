@@ -1,250 +1,442 @@
 """
-Weather tool for making weather API calls.
+WeatherTool: Retrieves weather information for the Labeeb agent, supporting queries by location and time.
 
----
-description: Tool for making weather API calls and processing weather data
-endpoints: [weather_tool]
-inputs: [city, query_type]
-outputs: [weather_data]
-dependencies: [requests, python-dotenv]
-auth: api_key
-alwaysApply: false
----
+This tool provides weather capabilities while following:
+- A2A (Agent-to-Agent) protocol for agent collaboration
+- MCP (Multi-Channel Protocol) for unified channel support
+- SmolAgents pattern for minimal, efficient implementation
 """
 
-import os
-import json
 import logging
-import requests
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
-from dotenv import load_dotenv
+import asyncio
+import time
+import aiohttp
+from typing import Dict, Any, List, Optional, Union
+from labeeb.core.ai.tool_base import BaseTool
 
-from labeeb.tools.base_tool import BaseTool
-from labeeb.utils.platform_utils import ensure_labeeb_directories
-
-# Configure logging
 logger = logging.getLogger(__name__)
 
+
 class WeatherTool(BaseTool):
-    """Tool for making weather API calls and processing weather data."""
-    
-    def __init__(self):
-        """Initialize the weather tool."""
-        super().__init__()
-        self.name = "weather_tool"
-        self.description = "Makes weather API calls and processes weather data"
-        self.version = "1.0.0"
-        
-        # Load environment variables
-        load_dotenv()
-        
-        # Ensure required directories exist
-        ensure_labeeb_directories()
-        
-        # Initialize configuration
-        self.config = {
-            "api_key": os.getenv("WEATHER_API_KEY"),
-            "api_base_url": "https://api.weatherapi.com/v1",
-            "units": "metric",
-            "language": "en",
-            "timeout": 10,  # seconds
-            "max_retries": 3
+    """Tool for performing weather operations."""
+
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        """Initialize the weather tool.
+
+        Args:
+            config: Optional configuration dictionary
+        """
+        if config is None:
+            config = {}
+        super().__init__(
+            name="weather", description="Tool for performing weather operations", config=config
+        )
+        self._api_key = config.get("api_key")
+        self._api_url = config.get("api_url", "https://api.openweathermap.org/data/2.5")
+        self._units = config.get("units", "metric")
+        self._language = config.get("language", "en")
+        self._cache_duration = config.get("cache_duration", 300)  # 5 minutes
+        self._max_requests = config.get("max_requests", 60)  # per minute
+        self._operation_history = []
+        self._max_history = config.get("max_history", 100)
+        self._cache = {}  # Weather data cache
+        self._request_times = []  # Request rate limiting
+
+    async def initialize(self) -> bool:
+        """Initialize the tool.
+
+        Returns:
+            bool: True if initialization was successful, False otherwise
+        """
+        try:
+            # Validate configuration
+            if not self._api_key:
+                logger.error("API key is required")
+                return False
+
+            # Initialize cache and request tracking
+            self._cache = {}
+            self._request_times = []
+
+            return await super().initialize()
+        except Exception as e:
+            logger.error(f"Failed to initialize WeatherTool: {e}")
+            return False
+
+    async def cleanup(self) -> None:
+        """Clean up resources used by the tool."""
+        try:
+            self._cache = {}
+            self._request_times = []
+            self._operation_history = []
+            await super().cleanup()
+        except Exception as e:
+            logger.error(f"Error cleaning up WeatherTool: {e}")
+
+    def get_capabilities(self) -> Dict[str, bool]:
+        """Get the capabilities of this tool.
+
+        Returns:
+            Dict[str, bool]: Dictionary of capability names and their availability
+        """
+        base_capabilities = super().get_capabilities()
+        tool_capabilities = {
+            "current": True,
+            "forecast": True,
+            "historical": True,
+            "alerts": True,
+            "history": True,
         }
-    
-    def get_weather_data(self, city: str) -> Dict[str, Any]:
-        """Get current weather data for a city."""
+        return {**base_capabilities, **tool_capabilities}
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get the current status of the tool.
+
+        Returns:
+            Dict[str, Any]: Dictionary containing status information
+        """
+        base_status = super().get_status()
+        tool_status = {
+            "api_url": self._api_url,
+            "units": self._units,
+            "language": self._language,
+            "cache_duration": self._cache_duration,
+            "max_requests": self._max_requests,
+            "cache_size": len(self._cache),
+            "history_size": len(self._operation_history),
+            "max_history": self._max_history,
+        }
+        return {**base_status, **tool_status}
+
+    async def _execute_command(
+        self, command: str, args: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Execute a specific command.
+
+        Args:
+            command: Command to execute
+            args: Optional arguments for the command
+
+        Returns:
+            Dict[str, Any]: Result of the command execution
+        """
+        if command == "current":
+            return await self._get_current_weather(args)
+        elif command == "forecast":
+            return await self._get_weather_forecast(args)
+        elif command == "historical":
+            return await self._get_historical_weather(args)
+        elif command == "alerts":
+            return await self._get_weather_alerts(args)
+        elif command == "get_history":
+            return await self._get_history()
+        elif command == "clear_history":
+            return await self._clear_history()
+        else:
+            return {"error": f"Unknown command: {command}"}
+
+    def _add_to_history(self, operation: str, details: Dict[str, Any]) -> None:
+        """Add an operation to history.
+
+        Args:
+            operation: Operation performed
+            details: Operation details
+        """
+        self._operation_history.append(
+            {"operation": operation, "details": details, "timestamp": time.time()}
+        )
+        if len(self._operation_history) > self._max_history:
+            self._operation_history.pop(0)
+
+    def _check_rate_limit(self) -> bool:
+        """Check if the rate limit has been exceeded.
+
+        Returns:
+            bool: True if rate limit is not exceeded, False otherwise
+        """
+        current_time = time.time()
+        # Remove requests older than 1 minute
+        self._request_times = [t for t in self._request_times if current_time - t < 60]
+        return len(self._request_times) < self._max_requests
+
+    def _add_request(self) -> None:
+        """Add a request to the rate limit tracking."""
+        self._request_times.append(time.time())
+
+    def _get_cache_key(self, location: str, command: str, **kwargs) -> str:
+        """Generate a cache key for weather data.
+
+        Args:
+            location: Location to get weather for
+            command: Weather command
+            **kwargs: Additional parameters
+
+        Returns:
+            str: Cache key
+        """
+        params = [location, command]
+        for key, value in sorted(kwargs.items()):
+            params.append(f"{key}={value}")
+        return "|".join(params)
+
+    def _is_cache_valid(self, cache_key: str) -> bool:
+        """Check if cached data is still valid.
+
+        Args:
+            cache_key: Cache key to check
+
+        Returns:
+            bool: True if cache is valid, False otherwise
+        """
+        if cache_key not in self._cache:
+            return False
+
+        cache_time = self._cache[cache_key]["timestamp"]
+        return time.time() - cache_time < self._cache_duration
+
+    async def _make_api_request(self, endpoint: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Make a request to the weather API.
+
+        Args:
+            endpoint: API endpoint
+            params: Request parameters
+
+        Returns:
+            Dict[str, Any]: API response
+        """
+        if not self._check_rate_limit():
+            return {"error": "Rate limit exceeded"}
+
         try:
-            url = f"{self.config['api_base_url']}/current.json"
-            params = {
-                "key": self.config["api_key"],
-                "q": city,
-                "units": self.config["units"],
-                "lang": self.config["language"]
-            }
-            
-            response = self._make_api_request(url, params)
-            return self._process_current_weather(response)
-            
+            async with aiohttp.ClientSession() as session:
+                url = f"{self._api_url}/{endpoint}"
+                params["appid"] = self._api_key
+                params["units"] = self._units
+                params["lang"] = self._language
+
+                async with session.get(url, params=params) as response:
+                    if response.status != 200:
+                        return {"error": f"API request failed: {response.status}"}
+
+                    data = await response.json()
+                    self._add_request()
+                    return data
         except Exception as e:
-            logger.error(f"Error getting weather data for {city}: {str(e)}")
-            raise
-    
-    def get_weather_forecast(self, city: str, days: int = 3) -> List[Dict[str, Any]]:
-        """Get weather forecast for a city."""
+            logger.error(f"Error making API request: {e}")
+            return {"error": str(e)}
+
+    async def _get_current_weather(self, args: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Get current weather for a location.
+
+        Args:
+            args: Location arguments
+
+        Returns:
+            Dict[str, Any]: Current weather data
+        """
         try:
-            url = f"{self.config['api_base_url']}/forecast.json"
-            params = {
-                "key": self.config["api_key"],
-                "q": city,
+            if not args or "location" not in args:
+                return {"error": "Missing location"}
+
+            location = args["location"]
+            cache_key = self._get_cache_key(location, "current")
+
+            # Check cache
+            if self._is_cache_valid(cache_key):
+                return self._cache[cache_key]["data"]
+
+            # Make API request
+            params = {"q": location}
+            data = await self._make_api_request("weather", params)
+
+            if "error" in data:
+                return data
+
+            # Cache response
+            self._cache[cache_key] = {"data": data, "timestamp": time.time()}
+
+            result = {
+                "status": "success",
+                "action": "current",
+                "location": location,
+                "weather": data,
+            }
+
+            self._add_to_history("current", {"location": location})
+
+            return result
+        except Exception as e:
+            logger.error(f"Error getting current weather: {e}")
+            return {"error": str(e)}
+
+    async def _get_weather_forecast(self, args: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Get weather forecast for a location.
+
+        Args:
+            args: Forecast arguments
+
+        Returns:
+            Dict[str, Any]: Forecast data
+        """
+        try:
+            if not args or "location" not in args:
+                return {"error": "Missing location"}
+
+            location = args["location"]
+            days = args.get("days", 5)
+
+            if days < 1 or days > 16:
+                return {"error": "Invalid forecast days (1-16)"}
+
+            cache_key = self._get_cache_key(location, "forecast", days=days)
+
+            # Check cache
+            if self._is_cache_valid(cache_key):
+                return self._cache[cache_key]["data"]
+
+            # Make API request
+            params = {"q": location, "cnt": days * 8}  # API returns 3-hour intervals
+            data = await self._make_api_request("forecast", params)
+
+            if "error" in data:
+                return data
+
+            # Cache response
+            self._cache[cache_key] = {"data": data, "timestamp": time.time()}
+
+            result = {
+                "status": "success",
+                "action": "forecast",
+                "location": location,
                 "days": days,
-                "units": self.config["units"],
-                "lang": self.config["language"]
+                "forecast": data,
             }
-            
-            response = self._make_api_request(url, params)
-            return self._process_forecast(response)
-            
+
+            self._add_to_history("forecast", {"location": location, "days": days})
+
+            return result
         except Exception as e:
-            logger.error(f"Error getting weather forecast for {city}: {str(e)}")
-            raise
-    
-    def get_weather_history(self, city: str, days: int = 7) -> List[Dict[str, Any]]:
-        """Get historical weather data for a city."""
+            logger.error(f"Error getting weather forecast: {e}")
+            return {"error": str(e)}
+
+    async def _get_historical_weather(
+        self, args: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Get historical weather data for a location.
+
+        Args:
+            args: Historical data arguments
+
+        Returns:
+            Dict[str, Any]: Historical weather data
+        """
         try:
-            history_data = []
-            for i in range(days):
-                date = (datetime.now() - timedelta(days=i+1)).strftime("%Y-%m-%d")
-                url = f"{self.config['api_base_url']}/history.json"
-                params = {
-                    "key": self.config["api_key"],
-                    "q": city,
-                    "dt": date,
-                    "units": self.config["units"],
-                    "lang": self.config["language"]
-                }
-                
-                response = self._make_api_request(url, params)
-                history_data.append(self._process_history(response))
-            
-            return history_data
-            
-        except Exception as e:
-            logger.error(f"Error getting weather history for {city}: {str(e)}")
-            raise
-    
-    def get_weather_alerts(self, city: str) -> List[Dict[str, Any]]:
-        """Get weather alerts for a city."""
-        try:
-            url = f"{self.config['api_base_url']}/alerts.json"
-            params = {
-                "key": self.config["api_key"],
-                "q": city,
-                "lang": self.config["language"]
+            if not args or "location" not in args or "date" not in args:
+                return {"error": "Missing location or date"}
+
+            location = args["location"]
+            date = args["date"]
+
+            cache_key = self._get_cache_key(location, "historical", date=date)
+
+            # Check cache
+            if self._is_cache_valid(cache_key):
+                return self._cache[cache_key]["data"]
+
+            # Make API request
+            params = {"q": location, "dt": int(time.mktime(time.strptime(date, "%Y-%m-%d")))}
+            data = await self._make_api_request("onecall/timemachine", params)
+
+            if "error" in data:
+                return data
+
+            # Cache response
+            self._cache[cache_key] = {"data": data, "timestamp": time.time()}
+
+            result = {
+                "status": "success",
+                "action": "historical",
+                "location": location,
+                "date": date,
+                "weather": data,
             }
-            
-            response = self._make_api_request(url, params)
-            return self._process_alerts(response)
-            
+
+            self._add_to_history("historical", {"location": location, "date": date})
+
+            return result
         except Exception as e:
-            logger.error(f"Error getting weather alerts for {city}: {str(e)}")
-            raise
-    
-    def _make_api_request(self, url: str, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Make an API request with retries."""
-        for attempt in range(self.config["max_retries"]):
-            try:
-                response = requests.get(
-                    url,
-                    params=params,
-                    timeout=self.config["timeout"]
-                )
-                response.raise_for_status()
-                return response.json()
-            except requests.exceptions.RequestException as e:
-                if attempt == self.config["max_retries"] - 1:
-                    raise
-                logger.warning(f"API request failed (attempt {attempt + 1}): {str(e)}")
-                continue
-    
-    def _process_current_weather(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process current weather data."""
+            logger.error(f"Error getting historical weather: {e}")
+            return {"error": str(e)}
+
+    async def _get_weather_alerts(self, args: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Get weather alerts for a location.
+
+        Args:
+            args: Alert arguments
+
+        Returns:
+            Dict[str, Any]: Weather alert data
+        """
         try:
-            current = data["current"]
-            location = data["location"]
-            
+            if not args or "location" not in args:
+                return {"error": "Missing location"}
+
+            location = args["location"]
+            cache_key = self._get_cache_key(location, "alerts")
+
+            # Check cache
+            if self._is_cache_valid(cache_key):
+                return self._cache[cache_key]["data"]
+
+            # Make API request
+            params = {"q": location}
+            data = await self._make_api_request("onecall", params)
+
+            if "error" in data:
+                return data
+
+            # Cache response
+            self._cache[cache_key] = {"data": data, "timestamp": time.time()}
+
+            result = {
+                "status": "success",
+                "action": "alerts",
+                "location": location,
+                "alerts": data.get("alerts", []),
+            }
+
+            self._add_to_history("alerts", {"location": location})
+
+            return result
+        except Exception as e:
+            logger.error(f"Error getting weather alerts: {e}")
+            return {"error": str(e)}
+
+    async def _get_history(self) -> Dict[str, Any]:
+        """Get operation history.
+
+        Returns:
+            Dict[str, Any]: Operation history
+        """
+        try:
             return {
-                "temperature": current["temp_c"],
-                "feels_like": current["feelslike_c"],
-                "conditions": current["condition"]["text"],
-                "humidity": current["humidity"],
-                "wind_speed": current["wind_kph"],
-                "wind_direction": current["wind_dir"],
-                "pressure": current["pressure_mb"],
-                "precipitation": current["precip_mm"],
-                "cloud_cover": current["cloud"],
-                "uv_index": current["uv"],
-                "location": {
-                    "name": location["name"],
-                    "region": location["region"],
-                    "country": location["country"],
-                    "lat": location["lat"],
-                    "lon": location["lon"],
-                    "timezone": location["tz_id"]
-                },
-                "last_updated": current["last_updated"]
+                "status": "success",
+                "action": "get_history",
+                "history": self._operation_history,
             }
-        except KeyError as e:
-            logger.error(f"Missing field in current weather data: {str(e)}")
-            raise
-    
-    def _process_forecast(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Process forecast data."""
+        except Exception as e:
+            logger.error(f"Error getting history: {e}")
+            return {"error": str(e)}
+
+    async def _clear_history(self) -> Dict[str, Any]:
+        """Clear operation history.
+
+        Returns:
+            Dict[str, Any]: Result of clearing history
+        """
         try:
-            forecast = []
-            for day in data["forecast"]["forecastday"]:
-                forecast.append({
-                    "date": day["date"],
-                    "max_temp": day["day"]["maxtemp_c"],
-                    "min_temp": day["day"]["mintemp_c"],
-                    "avg_temp": day["day"]["avgtemp_c"],
-                    "conditions": day["day"]["condition"]["text"],
-                    "humidity": day["day"]["avghumidity"],
-                    "precipitation": day["day"]["totalprecip_mm"],
-                    "chance_of_rain": day["day"]["daily_chance_of_rain"],
-                    "chance_of_snow": day["day"]["daily_chance_of_snow"],
-                    "uv_index": day["day"]["uv"],
-                    "sunrise": day["astro"]["sunrise"],
-                    "sunset": day["astro"]["sunset"],
-                    "moonrise": day["astro"]["moonrise"],
-                    "moonset": day["astro"]["moonset"],
-                    "moon_phase": day["astro"]["moon_phase"]
-                })
-            return forecast
-        except KeyError as e:
-            logger.error(f"Missing field in forecast data: {str(e)}")
-            raise
-    
-    def _process_history(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process historical weather data."""
-        try:
-            day = data["forecast"]["forecastday"][0]["day"]
-            return {
-                "date": data["forecast"]["forecastday"][0]["date"],
-                "max_temp": day["maxtemp_c"],
-                "min_temp": day["mintemp_c"],
-                "avg_temp": day["avgtemp_c"],
-                "conditions": day["condition"]["text"],
-                "humidity": day["avghumidity"],
-                "precipitation": day["totalprecip_mm"],
-                "uv_index": day["uv"]
-            }
-        except KeyError as e:
-            logger.error(f"Missing field in history data: {str(e)}")
-            raise
-    
-    def _process_alerts(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Process weather alerts data."""
-        try:
-            alerts = []
-            if "alerts" in data and "alert" in data["alerts"]:
-                for alert in data["alerts"]["alert"]:
-                    alerts.append({
-                        "headline": alert["headline"],
-                        "msgtype": alert["msgtype"],
-                        "severity": alert["severity"],
-                        "urgency": alert["urgency"],
-                        "areas": alert["areas"],
-                        "category": alert["category"],
-                        "certainty": alert["certainty"],
-                        "event": alert["event"],
-                        "note": alert["note"],
-                        "effective": alert["effective"],
-                        "expires": alert["expires"],
-                        "desc": alert["desc"],
-                        "instruction": alert["instruction"]
-                    })
-            return alerts
-        except KeyError as e:
-            logger.error(f"Missing field in alerts data: {str(e)}")
-            raise 
+            self._operation_history = []
+            return {"status": "success", "action": "clear_history"}
+        except Exception as e:
+            logger.error(f"Error clearing history: {e}")
+            return {"error": str(e)}

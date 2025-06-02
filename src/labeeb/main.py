@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import asyncio
+import nest_asyncio
 import arabic_reshaper
 from bidi.algorithm import get_display
 from labeeb.services.platform_services.common.platform_utils import get_platform_name
@@ -61,6 +62,8 @@ try:
 except ImportError:
     DisplayConnectionError = None
 
+# Apply nest_asyncio to allow nested event loops
+nest_asyncio.apply()
 
 class Labeeb:
     """Main Labeeb class that handles user interaction."""
@@ -191,8 +194,9 @@ Type 'help' for available commands or ask me anything!
 
             # Set default welcome message based on system locale
             default_lang = "ar" if self.rtl_support else "en"
+            platform_info_str = platform_info.get("os_name") or str(platform_info)
             welcome_text = self.welcome_messages[default_lang].format(
-                platform_info=platform_info["system"]
+                platform_info=platform_info_str
             )
 
             if self.rtl_support:
@@ -407,18 +411,26 @@ Type 'help' for available commands or ask me anything!
             help_text = get_display(arabic_reshaper.reshape(help_text))
         output.box(help_text, "المساعدة" if self.rtl_support else "Help")
 
-    def process_single_command(self, command: str) -> str:
-        """
-        Process a single command and return the result.
-
-        Args:
-            command: The command to process
-
-        Returns:
-            The command response
-        """
+    async def process_command_async(self, command: str) -> str:
+        """Process a command asynchronously."""
         try:
-            result = self.command_processor.process_command(command)
+            return await self.command_processor.process_command_async(command)
+        except Exception as e:
+            logger.error(f"Error processing command: {str(e)}")
+            return f"Error processing command: {str(e)}"
+
+    def process_single_command(self, command: str) -> str:
+        """Process a single command and return the result."""
+        try:
+            # Get the current event loop or create a new one
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            # Run the command
+            result = loop.run_until_complete(self.process_command_async(command))
             return result
         except Exception as e:
             # Handle display connection errors gracefully
@@ -571,7 +583,7 @@ Type 'help' for available commands or ask me anything!
             output.error("Invalid model selection.")
 
 
-async def main():
+def main():
     """Main entry point for Labeeb."""
     parser = argparse.ArgumentParser(description="Labeeb - AI-powered shell assistant")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
@@ -656,4 +668,4 @@ async def process_command_and_log(command: str):
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
